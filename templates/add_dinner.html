@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+
+{% block body %}
+<form method='post'>
+	{% csrf_token %}
+	Enter in format: YYYY-mm-dd
+	<input type='text' name='date'></input><br>
+	Seats:
+	<input type='text' name='attendees'></input>
+	<input type='submit' value='submit' />
+</form>
+
+Current dinners in DB:
+{% for dinner in dinners %}
+Dinner on: {{ dinner.date }}, attendees: {{ dinner.attendees }}<br>
+	{% for person_to_dinner in dinner.get_person_to_dinners %}
+	Attending: {{ person_to_dinner.person }}<br>
+	{% endfor %}
+{% endfor %}
+
+<br>
+{% endblock body %}

@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+
+{% block body %}
+
+<form method="post">
+	{% csrf_token %}
+	{% for seat_number in seat_numbers %}
+		{% if forloop.counter|add:-1 == 0 %}
+		Head:
+		{% elif forloop.counter == seat_numbers|length %}
+		<br>
+		Foot:
+		{% endif %}
+	{{ seat_number }}
+		<select type='select' name='seat__{{ seat_number }}' />
+			<option value='blank'>BLANK</option>
+			{% for person_at_dinner in people_at_dinner %}
+			<option value='{{ person_at_dinner.person.pk }}'{% if person_at_dinner.seat_number == seat_number %} selected='yes'{% endif %}>{{ person_at_dinner.person.name }}</option>
+			{% endfor %}
+			{% if not seat_numbers|length|divisibleby:2 %}
+				{% if forloop.counter == seat_numbers|length|add:-3 %}
+					<option value='empty'>EMPTY</option>
+				{% elif forloop.counter == seat_numbers|length|add:-2 %}
+					<option value='empty'>EMPTY</option>
+				{% endif %}
+			{% endif %}
+		</select>
+		{% if not forloop.counter|divisibleby:2 %}
+		<br>
+		{% endif %}
+	{% endfor %}
+
+	<br>
+
+	<input type='submit' value='Save' name='save' /><br>
+	<input type='submit' value='Generate' name='generate' /><br>
+	<input type='submit' value='Reset' name='reset' /><br>
+
+</form>
+{% endblock body %}

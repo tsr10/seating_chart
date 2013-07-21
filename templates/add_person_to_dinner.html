@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+
+{% block body %}
+<form method='post'>
+	{% csrf_token %}
+	Dinner: {{ dinner.date }}
+	<br>
+	People:
+	<select type='select' name='select_person' />
+		{% for person in people %}
+			<option value='{{ person.pk }}'>{{ person.name }}</option>
+		{% endfor %}
+	</select>
+	<input type='submit' value='add' name='add' /><br>
+	{% for person_at_dinner in people_at_dinner %}
+		{{ person_at_dinner }}<input type='submit' value='{{ person_at_dinner.pk }}' name='delete' /><br>
+	{% endfor %}
+</form>
+{% endblock body %}

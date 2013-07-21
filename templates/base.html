@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+	{% block head %}
+	<a href="{% url 'add_person' %}">Add Person</a><br>
+	<a href="{% url 'add_dinner' %}">Add Dinner</a><br>
+	<a href="{% url 'generate_seating_chart' %}">Generate Seating Chart</a><br>
+	<a href="{% url 'add_person_to_dinner' %}">Add Person To Dinner</a><br>
+	{% endblock head %}
+</head>
+<title>
+	{% block title %}
+	Generate seating chart
+	{% endblock title %}
+</title>
+<body>
+	{% if messages %}
+	<ul class="messages">
+	    {% for message in messages %}
+	    <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+	    {% endfor %}
+	</ul>
+	{% endif %}
+	{% block body %}
+	{% endblock body %}
+</body>
+</html>
