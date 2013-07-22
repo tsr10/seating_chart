@@ -28,7 +28,7 @@ def generate_seating_chart(request):
 	error = False
 
 	if request.method == 'POST':
-		placed_seats = get_placed_seats(request=request)
+		placed_seats = get_placed_seats(request_dict=request.POST)
 		generate = request.POST.get('generate')
 		save = request.POST.get('save')
 		reset = request.POST.get('reset')
@@ -130,3 +130,9 @@ def add_person_to_dinner(request):
 		'dinner' : dinner,
 		'people_at_dinner' : people_at_dinner},
 		context_instance=RequestContext(request))
+
+def view_dinner(request, dinner_pk):
+	"""
+	Displays the layout of a particular dinner.
+	"""
+	dinner = Dinner.objects.get(pk=dinner_pk)

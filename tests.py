@@ -1,4 +1,4 @@
-from django.test import TestCase
+from django.tests import TestCase
 from seating_chart.models import Person, Dinner, PersonToDinner
 from seating_chart.utils import get_placed_seats
 
@@ -12,7 +12,7 @@ class SeatingChartUtilsTests(TestCase):
 		ted.save()
 		brett = Person(name='Brett')
 		brett.save()
-		request_dict = {'seat__1' : str(ted.pk),
-		'seat__2' : str(brett.pk)}
+		request_dict = {'1' : 'Ted',
+		'2' : 'Brett'}
 		placed_seats = get_placed_seats(request_dict=request_dict)
-		self.assertEqual(placed_seats, {'1': ted, '2': brett})
+		self.assertEqual(placed_seats, '')
