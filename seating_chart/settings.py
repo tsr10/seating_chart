@@ -1,4 +1,7 @@
+import os
+
 # Django settings for seating_chart project.
+_PROJECT_ROOT = os.environ.get('X_DJANGO_PROJECT_PATH', os.path.join(os.path.abspath(os.path.dirname(__file__)), '..'))
 
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
@@ -103,10 +106,7 @@ ROOT_URLCONF = 'urls'
 WSGI_APPLICATION = 'seating_chart.wsgi.application'
 
 TEMPLATE_DIRS = (
-    # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
-    # Always use forward slashes, even on Windows.
-    # Don't forget to use absolute paths, not relative paths.
-    '/Users/theodorerogers/mgh/seating_chart/templates',
+    os.path.join(_PROJECT_ROOT, 'templates'),
 )
 
 INSTALLED_APPS = (
