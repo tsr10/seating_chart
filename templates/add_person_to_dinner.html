@@ -3,11 +3,17 @@
 {% block body %}
 <form method='post'>
 	{% csrf_token %}
-	Dinner: {{ dinner.date }}
+	Dinner: {{ dinner.date }} -- attendees:
+	<select type='select' name='attendees' />
+		{% for number in attendees %}
+			<option value='{{ number }}' {% if number == dinner.attendees %}selected="selected"{% endif %}>{{ number }}</option>
+		{% endfor %}
+	</select>
+	<input type='submit' value='attendees' name='change_attendees' />
 	<br>
 	People:
 	<select type='select' name='select_person' />
-		{% for person in people %}
+		{% for person in people_not_at_dinner %}
 			<option value='{{ person.pk }}'>{{ person.name }}</option>
 		{% endfor %}
 	</select>

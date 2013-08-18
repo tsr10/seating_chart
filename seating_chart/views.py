@@ -9,6 +9,12 @@ def home(request):
 	return redirect('seating_chart.views.add_person')
 
 def generate_seating_chart(request):
+	"""
+	Generates the seating chart. You can only use these commands if you've assigned enough people to this
+	dinner already.
+	"""
+
+	error = False
 
 	dinners = Dinner.objects.filter(is_saved=False)
 	if not dinners:
@@ -19,15 +25,16 @@ def generate_seating_chart(request):
 
 	if people_at_dinner.count() < dinner.attendees:
 		messages.add_message(request, messages.ERROR, 'Add more people to this dinner!')
+		error = True
 	elif people_at_dinner.count() > dinner.attendees:
+		error = True
 		messages.add_message(request, messages.ERROR, 'Too many people in this dinner!')
 
 	seat_numbers = range(0, dinner.attendees)
 	seat_dictionary = {}
 	placed_seats = {}
-	error = False
 
-	if request.method == 'POST':
+	if request.method == 'POST' and error == False:
 		placed_seats = get_placed_seats(request_dict=request.POST)
 		generate = request.POST.get('generate')
 		save = request.POST.get('save')
@@ -39,9 +46,11 @@ def generate_seating_chart(request):
 				seat_list = generate_random_seat_list(placed_seats=placed_seats, dinner=dinner, diners=people_at_dinner)
 				does_list_work = check_to_see_if_list_works(seat_list=seat_list, placed_diners=placed_seats)
 				if does_list_work:
+					i = 0
 					for person in seat_list:
 						person_to_dinner = PersonToDinner.objects.get(dinner=dinner, person=person)
 						person_to_dinner.seat_number = i
+						i += 1
 						person_to_dinner.save()
 		if save:
 			if not all_seats_filled(placed_seats=placed_seats, dinner=dinner):
@@ -103,13 +112,18 @@ def add_person_to_dinner(request):
 	"""
 	Allows the host to add a person to a dinner.
 	"""
-	people = Person.objects.filter()
+	people = set([person for person in Person.objects.filter()])
+	people_already_at_dinner = set([person_to_dinner.person for person_to_dinner in PersonToDinner.objects.filter()])
+
+	people_not_at_dinner = list(people - people_already_at_dinner)
+
 	dinner = Dinner.objects.get(is_saved=False)
 	people_at_dinner = PersonToDinner.objects.filter(dinner=dinner)
 
 	if request.method == 'POST':
 		add = request.POST.get('add')
 		delete = request.POST.get('delete')
+		change_attendees = request.POST.get('change_attendees')
 		if add:
 			if dinner.attendees <= people_at_dinner.count():
 				messages.add_message(request, messages.ERROR, "Dinner is full!")
@@ -118,17 +132,28 @@ def add_person_to_dinner(request):
 				person_to_dinner = PersonToDinner(person=Person.objects.get(pk=person), dinner=dinner)
 				person_to_dinner.save()
 				messages.add_message(request, messages.SUCCESS, person_to_dinner.person.name + " added to dinner on " + str(person_to_dinner.dinner.date))
+				return redirect('seating_chart.views.add_person_to_dinner')
 		elif delete:
 			person_to_dinner_to_delete = request.POST.get('delete')
 			person_to_dinner = PersonToDinner.objects.get(pk=person_to_dinner_to_delete)
 			name = person_to_dinner.person.name
 			person_to_dinner.delete()
 			messages.add_message(request, messages.SUCCESS, name + " deleted from dinner.")
+			return redirect('seating_chart.views.add_person_to_dinner')
+		elif change_attendees:
+			attendees = request.POST.get('attendees')
+			dinner.attendees = int(attendees)
+			dinner.save()
+			messages.add_message(request, messages.SUCCESS, "Number of attendees changed to " + str(dinner.attendees) + ".")
+			return redirect('seating_chart.views.add_person_to_dinner')
+
+	attendees = range(3, 100)
 
 	return render_to_response('add_person_to_dinner.html',
-		{'people' : people,
+		{'people_not_at_dinner' : people_not_at_dinner,
 		'dinner' : dinner,
-		'people_at_dinner' : people_at_dinner},
+		'people_at_dinner' : people_at_dinner,
+		'attendees' : attendees},
 		context_instance=RequestContext(request))
 
 def view_dinner(request, dinner_pk):
