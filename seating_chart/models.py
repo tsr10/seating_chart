@@ -14,6 +14,9 @@ class Dinner(models.Model):
 	def __unicode__(self):
 	        return str(self.date) + ": " + str(self.attendees) + " attendees"
 
+	def get_seat_numbers(self):
+		return range(0, self.attendees)
+
 	def get_person_to_dinners(self):
 		return PersonToDinner.objects.filter(dinner=self)
 

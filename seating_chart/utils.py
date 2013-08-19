@@ -106,7 +106,7 @@ def get_left_neighbor(dinner, person):
 	if seat_number == 0:
 		left_neighbor = PersonToDinner.objects.filter(person=person, dinner=dinner, seat_number=2)[0]
 	elif seat_number == dinner.attendees - 1:
-		left_neighbor = PersonToDinner.objects.filter(person=person, dinner=dinner, seat_number=dinner.attendees-3)[0]
+		left_neighbor = PersonToDinner.objects.filter(person=person, dinner=dinner, seat_number=seat_number-2)[0]
 	elif seat_number == 1:
 		left_neighbor = PersonToDinner.objects.filter(person=person, dinner=dinner, seat_number=0)[0]
 	else: 
@@ -119,11 +119,14 @@ def get_right_neighbor(dinner, person):
 	"""
 	seat_number = PersonToDinner.objects.filter(person=person, dinner=dinner).seat_number
 	if seat_number == 0:
-		right_neighbor = PersonToDinner.objects.filter(person=person, dinner=dinner, seat_number=1)[0]
-	elif seat_number == 1000:
-		right_neighbor = PersonToDinner.objects.filter(person=person, dinner=dinner, seat_number=dinner.attendees - 3)[0]
-	elif seat_number == dinner.attendees-2:
-		right_neighbor = PersonToDinner.objects.filter(person=person, dinner=dinner, seat_number=dinner.attendees - 1)[0]
+		right_neighbor = PersonToDinner.objects.filter(person=person, dinner=dinner, seat_number=seat_number + 1)[0]
+	elif seat_number == dinner.attendees - 1:
+		if dinner.attendees % 2 == 1:
+			right_neighbor = PersonToDinner.objects.filter(person=person, dinner=dinner, seat_number=seat_number - 2)[0]
+		else:
+			right_neighbor = PersonToDinner.objects.filter(person=person, dinner=dinner, seat_number=seat_number - 2)[0]
+	elif seat_number == dinner.attendees-2 and dinner.attendees % 2 == 1:
+		right_neighbor = PersonToDinner.objects.filter(person=person, dinner=dinner, seat_number=seat_number + 1)[0]
 	else: 
 		right_neighbor = PersonToDinner.objects.filter(person=person, dinner=dinner, seat_number=seat_number+2)[0]
 	return right_neighbor
@@ -139,4 +142,5 @@ def create_new_working_seating_chart(seat_list):
 		i += 1
 	return placed_seats
 
-
+def get_all_dinners():
+	return Dinner.objects.filter().order_by('-date')

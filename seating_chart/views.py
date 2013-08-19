@@ -3,7 +3,7 @@ from django.shortcuts import render_to_response, redirect
 from django.template import RequestContext
 
 from seating_chart.models import Person, Dinner, PersonToDinner
-from seating_chart.utils import get_placed_seats, all_seats_filled, create_new_working_seating_chart, generate_random_seat_list, check_to_see_if_list_works, create_new_working_seating_chart
+from seating_chart.utils import get_placed_seats, all_seats_filled, create_new_working_seating_chart, generate_random_seat_list, check_to_see_if_list_works, create_new_working_seating_chart, get_all_dinners
 
 def home(request):
 	return redirect('seating_chart.views.add_person')
@@ -30,7 +30,7 @@ def generate_seating_chart(request):
 		error = True
 		messages.add_message(request, messages.ERROR, 'Too many people in this dinner!')
 
-	seat_numbers = range(0, dinner.attendees)
+	seat_numbers = dinner.get_seat_numbers()
 	seat_dictionary = {}
 	placed_seats = {}
 
@@ -102,7 +102,7 @@ def add_dinner(request):
 		dinner.save()
 		messages.add_message(request, messages.SUCCESS, "Dinner for " + dinner.date + " was added to database.")
 
-	dinners = Dinner.objects.filter()
+	dinners = get_all_dinners()
 
 	return render_to_response('add_dinner.html',
 		{'dinners' : dinners,},
@@ -112,12 +112,17 @@ def add_person_to_dinner(request):
 	"""
 	Allows the host to add a person to a dinner.
 	"""
+	dinner = Dinner.objects.filter(is_saved=False)
+	if dinner.exists():
+		dinner = dinner[0]
+	else:
+		messages.add_message(request, messages.WARNING, "You need to add a new dinner first!")
+		return redirect('seating_chart.views.add_dinner')
 	people = set([person for person in Person.objects.filter()])
-	people_already_at_dinner = set([person_to_dinner.person for person_to_dinner in PersonToDinner.objects.filter()])
+	people_already_at_dinner = set([person_to_dinner.person for person_to_dinner in PersonToDinner.objects.filter(dinner=dinner)])
 
 	people_not_at_dinner = list(people - people_already_at_dinner)
 
-	dinner = Dinner.objects.get(is_saved=False)
 	people_at_dinner = PersonToDinner.objects.filter(dinner=dinner)
 
 	if request.method == 'POST':
@@ -155,9 +160,3 @@ def add_person_to_dinner(request):
 		'people_at_dinner' : people_at_dinner,
 		'attendees' : attendees},
 		context_instance=RequestContext(request))
-
-def view_dinner(request, dinner_pk):
-	"""
-	Displays the layout of a particular dinner.
-	"""
-	dinner = Dinner.objects.get(pk=dinner_pk)
