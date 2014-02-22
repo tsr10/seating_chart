@@ -46,7 +46,6 @@ class PersonToDinner(models.Model):
 
     head = models.BooleanField(default=False)
     foot = models.BooleanField(default=False)
-    seat_number = models.IntegerField(null=True, blank=True)
 
     def __unicode__(self):
             return str(self.person.get_name()) + ": " + str(self.dinner) + ", seat number: " + str(self.seat_number)

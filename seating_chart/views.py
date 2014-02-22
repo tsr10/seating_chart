@@ -14,26 +14,11 @@ def generate_seating_chart(request, pk):
 	Generates the seating chart. You can only use these commands if you've assigned enough people to this
 	dinner already.
 	"""
+	account = Account.objects.filter()[0]
 
-	error = False
+	dinner = Dinner.objects.get(pk=pk)
 
-	dinners = Dinner.objects.filter(is_saved=False)
-	if not dinners:
-		return redirect('seating_chart.views.add_dinner')
-	else:
-		dinner = dinners[0]
 	people_at_dinner = PersonToDinner.objects.filter(dinner=dinner)
-
-	if people_at_dinner.count() < dinner.attendees:
-		messages.add_message(request, messages.ERROR, 'Add more people to this dinner!')
-		error = True
-	elif people_at_dinner.count() > dinner.attendees:
-		error = True
-		messages.add_message(request, messages.ERROR, 'Too many people in this dinner!')
-
-	seat_numbers = dinner.get_seat_numbers()
-	seat_dictionary = {}
-	placed_seats = {}
 
 	if request.method == 'POST' and error == False:
 		placed_seats = get_placed_seats(request_dict=request.POST)
@@ -68,8 +53,7 @@ def generate_seating_chart(request, pk):
 			return redirect('seating_chart.views.generate_seating_chart')
 
 	post_dict = {'people_at_dinner' : people_at_dinner,
-	'seat_numbers' : seat_numbers,}
-	post_dict.update(placed_seats)
+	'account' : account,}
 
 	return render_to_response('generate_seating_chart.html',
 		post_dict,
@@ -97,7 +81,7 @@ def add_person(request):
 
 	return render_to_response('add_person.html',
 		{'people' : people,
-		'accot' : account,
+		'account' : account,
 		'form' : form},
 		context_instance=RequestContext(request))
 
@@ -112,7 +96,7 @@ def add_dinner(request):
 	if request.method == 'POST':
 		form = Form(request.POST)
 		if form.is_valid():
-			dinner = Dinner(date=form.cleaned_data['date'], attendees=form.cleaned_data['attendees'], account=account)
+			dinner = Dinner(date=form.cleaned_data['date'], account=account)
 			dinner.save()
 		messages.add_message(request, messages.SUCCESS, "Dinner for " + str(dinner.date) + " was added to database.")
 	else:
