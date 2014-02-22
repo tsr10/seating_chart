@@ -27,13 +27,35 @@
                     <a class="navbar-brand" href="#">Seating Chart</a>
                 </div>
 
-                <!-- Actual navbar -->
                 <div class="collapse navbar-collapse" id="navbar-collapse">
                     <ul class="nav navbar-nav">
                         <li class="active"><a href="{% url 'add_person' %}">Add Person</a></li>
                         <li class="active"><a href="{% url 'add_dinner' %}">Add Dinner</a></li>
-                        <li class="active"><a href="{% url 'generate_seating_chart' %}">Generate Seating Chart</a></li>
-                        <li class="active"><a href="{% url 'add_person_to_dinner' %}">Add Person To Dinner</a></li>
+                        <li class="active"></li>
+                        <li class="dropdown">
+                            <a href="#" class='dropdown-toggle' data-toggle='dropdown'>Add Person to Dinner  <b class="caret"></b></a>
+                            <ul class='dropdown-menu'>
+                                {% if account.upcoming_dinners %}
+                                {% for dinner in account.upcoming_dinners %}
+                                <li><a href="{% url 'add_person_to_dinner' pk=dinner.pk %}">{{ dinner }}</a></li>
+                                {% endfor %}
+                                {% else %}
+                                <li>No upcoming dinners.</li>
+                                {% endif %}
+                            </ul>
+                        </li>
+                        <li class="dropdown">
+                            <a href="#" class='dropdown-toggle' data-toggle='dropdown'>Generate seating chart <b class="caret"></b></a>
+                            <ul class='dropdown-menu'>
+                                {% if account.upcoming_dinners %}
+                                {% for dinner in account.upcoming_dinners %}
+                                <li><a href="{% url 'generate_seating_chart' pk=dinner.pk %}">{{ dinner }}</a></li>
+                                {% endfor %}
+                                {% else %}
+                                <li>No upcoming dinners.</li>
+                                {% endif %}
+                            </ul>
+                        </li>
                     </ul>
                 </div>
             </div>

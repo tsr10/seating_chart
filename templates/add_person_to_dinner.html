@@ -3,23 +3,13 @@
 {% block body %}
 <form method='post'>
 	{% csrf_token %}
-	Dinner: {{ dinner.date }} -- attendees:
-	<select type='select' name='attendees' />
-		{% for number in attendees %}
-			<option value='{{ number }}' {% if number == dinner.attendees %}selected="selected"{% endif %}>{{ number }}</option>
-		{% endfor %}
-	</select>
-	<input type='submit' value='attendees' name='change_attendees' />
-	<br>
-	People:
-	<select type='select' name='select_person' />
-		{% for person in people_not_at_dinner %}
-			<option value='{{ person.pk }}'>{{ person.name }}</option>
-		{% endfor %}
-	</select>
-	<input type='submit' value='add' name='add' /><br>
-	{% for person_at_dinner in people_at_dinner %}
-		{{ person_at_dinner }}<input type='submit' value='{{ person_at_dinner.pk }}' name='delete' /><br>
-	{% endfor %}
+	{% include 'forms/generic-form.html' %}
+	<input type='submit' value='submit' />
 </form>
+
+<ul>Current people at dinner:
+	{% for person_at_dinner in people_at_dinner %}
+	<li>{{ person_at_dinner.person.get_name }}</li>
+	{% endfor %}
+</ul>
 {% endblock body %}

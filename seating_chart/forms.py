@@ -1,18 +1,17 @@
 from django import forms
 from django.forms import extras
 
-from models import Person, Dinner
+from models import Person, Dinner, PersonToDinner
 
 import datetime
 
+#Controls the page where we add new people to an account
 class _AddPersonForm(forms.Form):
 	first_name = forms.CharField(max_length=100, required=True)
 	last_name = forms.CharField(max_length=100, required=True)
 
 	def clean(self):
 		super(_AddPersonForm, self).clean()
-
-		self.person = None
 
 		first_name = self.cleaned_data.get('first_name', None)
 		last_name = self.cleaned_data.get('last_name', None)
@@ -29,7 +28,7 @@ def add_person_form_factory(account):
 
 	return Form
 
-
+#Controls the page where we add new dinners.
 class _AddDinnerForm(forms.Form):
     date = forms.DateField(required=True, label='Date of dinner',
         widget=extras.SelectDateWidget(
@@ -37,7 +36,6 @@ class _AddDinnerForm(forms.Form):
             attrs={'empty_label': ''}
         )
     )
-    attendees = forms.ChoiceField(choices=zip(range(5,50), range(5, 50)), initial=5)
 
 def add_dinner_form_factory(account):
 
@@ -45,3 +43,28 @@ def add_dinner_form_factory(account):
 		_account = account
 
 	return Form
+
+#Controls the page where we add people to dinners.
+class _AddPersonToDinnerForm(forms.Form):
+	pass
+
+	def clean(self):
+		super(_AddPersonToDinnerForm, self).clean()
+
+		person = self.cleaned_data.get('person', None)
+		dinner = self._dinner
+
+		if PersonToDinner.objects.filter(person=person, dinner=dinner).exists():
+			raise forms.ValidationError("This person is already attached to this dinner!")
+
+		return self.cleaned_data
+
+def add_person_to_dinner_form_factory(dinner, account):
+
+	class Form(_AddPersonToDinnerForm):
+		person = forms.ModelChoiceField(Person.objects.filter(account=account))
+		_dinner = dinner
+
+	return Form
+
+
