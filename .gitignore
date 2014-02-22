@@ -3,3 +3,5 @@
 .elasticbeanstalk/
 database.sqlite
 seating-chart.pem
+.DS_Store
+seating_chart/.DS_Store
