@@ -2,7 +2,7 @@ from django.contrib import messages
 from django.shortcuts import render_to_response, redirect
 from django.template import RequestContext
 
-from seating_chart.forms import add_person_form_factory
+from seating_chart.forms import add_person_form_factory, add_dinner_form_factory
 from seating_chart.models import Person, Dinner, PersonToDinner, Account
 from seating_chart.utils import get_placed_seats, all_seats_filled, create_new_working_seating_chart, generate_random_seat_list, check_to_see_if_list_works, create_new_working_seating_chart, get_all_dinners
 
@@ -86,7 +86,7 @@ def add_person(request):
 	if request.method == 'POST':
 		form = Form(request.POST)
 		if form.is_valid():
-			person = Person(first_name=form.cleaned_data['first_name'], last_name=form.cleaned_data['last_name'], account=form.cleaned_data['account'])
+			person = Person(first_name=form.cleaned_data['first_name'], last_name=form.cleaned_data['last_name'], account=account)
 			person.save()
 			messages.add_message(request, messages.SUCCESS, person.get_name() + " was added to database.")
 	else:
@@ -105,17 +105,22 @@ def add_dinner(request):
 	"""
 	account = Account.objects.filter()[0]
 
+	Form = add_dinner_form_factory(account=account)
+
 	if request.method == 'POST':
-		date = request.POST.get('date')
-		attendees = request.POST.get('attendees')
-		dinner = Dinner(date=date, attendees=attendees, account=account)
-		dinner.save()
+		form = Form(request.POST)
+		if form.is_valid():
+			dinner = Dinner(date=form.cleaned_data['date'], attendees=form.cleaned_data['attendees'], account=account)
+			dinner.save()
 		messages.add_message(request, messages.SUCCESS, "Dinner for " + dinner.date + " was added to database.")
+	else:
+		form = Form()
 
 	dinners = get_all_dinners()
 
 	return render_to_response('add_dinner.html',
-		{'dinners' : dinners,},
+		{'dinners' : dinners,
+		'form' : form,},
 		context_instance=RequestContext(request))
 
 def add_person_to_dinner(request):

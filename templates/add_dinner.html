@@ -3,10 +3,7 @@
 {% block body %}
 <form method='post'>
 	{% csrf_token %}
-	Enter in format: YYYY-mm-dd
-	<input type='text' name='date'></input><br>
-	Seats:
-	<input type='text' name='attendees'></input>
+	{% include 'forms/generic-form.html' %}
 	<input type='submit' value='submit' />
 </form>
 
