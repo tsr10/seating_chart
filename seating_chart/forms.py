@@ -33,7 +33,7 @@ def add_person_form_factory(account):
 class _AddDinnerForm(forms.Form):
     date = forms.DateField(required=True, label='Date of dinner',
         widget=extras.SelectDateWidget(
-            years=tuple(reversed(range(1900, datetime.date.today().year + 1))),
+            years=tuple(reversed(range(datetime.date.today().year, datetime.date.today().year + 2))),
             attrs={'empty_label': ''}
         )
     )

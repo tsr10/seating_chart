@@ -112,7 +112,7 @@ def add_dinner(request):
 		if form.is_valid():
 			dinner = Dinner(date=form.cleaned_data['date'], attendees=form.cleaned_data['attendees'], account=account)
 			dinner.save()
-		messages.add_message(request, messages.SUCCESS, "Dinner for " + dinner.date + " was added to database.")
+		messages.add_message(request, messages.SUCCESS, "Dinner for " + str(dinner.date) + " was added to database.")
 	else:
 		form = Form()
 
