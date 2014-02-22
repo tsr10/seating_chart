@@ -3,14 +3,16 @@
 {% block body %}
 <form method='post'>
 	{% csrf_token %}
-	<input type='text' name='name'></input>
+	{% include 'forms/generic-form.html' %}
+
 	<input type='submit' value='submit' />
 </form>
 
 <br>
-<br>
 Current people in database:<br>
+<ul>
 {% for person in people %}
-	{{ person.name }}<br>
+	<li>{{ person.get_name }}</li>
 {% endfor %}
+</ul>
 {% endblock body %}

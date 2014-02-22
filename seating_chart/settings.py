@@ -70,6 +70,7 @@ STATICFILES_DIRS = (
     # Put strings here, like "/home/html/static" or "C:/www/django/static".
     # Always use forward slashes, even on Windows.
     # Don't forget to use absolute paths, not relative paths.
+    os.path.join(_PROJECT_ROOT, 'media'),
 )
 
 # List of finder classes that know how to find static files in
@@ -120,7 +121,12 @@ INSTALLED_APPS = (
     'django.contrib.admin',
     # Uncomment the next line to enable admin documentation:
     'django.contrib.admindocs',
-
+    
+    'widget_tweaks',
+    'django_extensions', 
+    'bootstrap_toolkit',
+    'bootstrap3',
+    'compressor',
     'seating_chart',
 )
 

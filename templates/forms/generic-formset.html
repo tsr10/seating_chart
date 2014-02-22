@@ -1,0 +1,10 @@
+
+{{ formset.management_form }}
+{% for form in formset %}
+    {{ form.id }}
+
+    <div class="formset-form">
+        {% include "generic-form.html" %}
+    </div>
+
+{% endfor %}

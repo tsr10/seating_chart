@@ -1,0 +1,19 @@
+{% load widget_tweaks %}
+
+{% if field.is_hidden %}
+    {{ field }}
+{% else %}
+    <div class="form-group {% if field.errors %}field-error has-error{% endif %} form-field-{{ field.html_name }}-container">
+        <label for="id_{{ field.html_name }}" class="control-label">{{ field.label }}:
+            {% if field.help_text %}
+                <br/><span class="help-block">{{ field.help_text }}</span>
+            {% endif %}
+
+            {% for error in field.errors %}
+                <br/><span class="help-block help-block-error">{{error}}</span>
+            {% endfor %}
+        </label>
+
+        {{ field|add_class:"form-control"|add_error_class:"" }}
+    </div>
+{% endif %}

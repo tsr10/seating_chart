@@ -1,0 +1,10 @@
+
+{% if form.non_field_errors %}
+    {% for error in form.non_field_errors %}
+        <div class="alert alert-error">
+            <i class="icon-warning-sign"></i>
+            <div class="alert-text">{{ error }}</div>
+        </div>
+    {% endfor %}
+{% endif %}
+

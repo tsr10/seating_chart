@@ -2,7 +2,8 @@ from django.contrib import messages
 from django.shortcuts import render_to_response, redirect
 from django.template import RequestContext
 
-from seating_chart.models import Person, Dinner, PersonToDinner
+from seating_chart.forms import add_person_form_factory
+from seating_chart.models import Person, Dinner, PersonToDinner, Account
 from seating_chart.utils import get_placed_seats, all_seats_filled, create_new_working_seating_chart, generate_random_seat_list, check_to_see_if_list_works, create_new_working_seating_chart, get_all_dinners
 
 def home(request):
@@ -48,7 +49,7 @@ def generate_seating_chart(request):
 				if does_list_work:
 					i = 0
 					for person in seat_list:
-						person_to_dinner = PersonToDinner.objects.get(dinner=dinner, person=person)
+						person_to_dinner = PersonToDinner.objects.get(dinner=dinner, person=person, account=account)
 						person_to_dinner.seat_number = i
 						i += 1
 						person_to_dinner.save()
@@ -78,27 +79,36 @@ def add_person(request):
 	"""
 	Allows the host to add a new person to the database.
 	"""
+	account = Account.objects.filter()[0]
+
+	Form = add_person_form_factory(account=account)
 
 	if request.method == 'POST':
-		name = request.POST.get('name')
-		person = Person(name=name)
-		person.save()
-		messages.add_message(request, messages.SUCCESS, person.name + " was added to database.")
+		form = Form(request.POST)
+		if form.is_valid():
+			person = Person(first_name=form.cleaned_data['first_name'], last_name=form.cleaned_data['last_name'], account=form.cleaned_data['account'])
+			person.save()
+			messages.add_message(request, messages.SUCCESS, person.get_name() + " was added to database.")
+	else:
+		form = Form()
 
-	people = Person.objects.filter()
+	people = Person.objects.filter(account=account)
 
 	return render_to_response('add_person.html',
-		{'people' : people},
+		{'people' : people,
+		'form' : form},
 		context_instance=RequestContext(request))
 
 def add_dinner(request):
 	"""
 	Allows the host to add a new dinner.
 	"""
+	account = Account.objects.filter()[0]
+
 	if request.method == 'POST':
 		date = request.POST.get('date')
 		attendees = request.POST.get('attendees')
-		dinner = Dinner(date=date, attendees=attendees)
+		dinner = Dinner(date=date, attendees=attendees, account=account)
 		dinner.save()
 		messages.add_message(request, messages.SUCCESS, "Dinner for " + dinner.date + " was added to database.")
 
@@ -112,6 +122,8 @@ def add_person_to_dinner(request):
 	"""
 	Allows the host to add a person to a dinner.
 	"""
+	account = Account.objects.filter()[0]
+
 	dinner = Dinner.objects.filter(is_saved=False)
 	if dinner.exists():
 		dinner = dinner[0]
@@ -134,13 +146,13 @@ def add_person_to_dinner(request):
 				messages.add_message(request, messages.ERROR, "Dinner is full!")
 			else:
 				person = request.POST.get('select_person')
-				person_to_dinner = PersonToDinner(person=Person.objects.get(pk=person), dinner=dinner)
+				person_to_dinner = PersonToDinner(person=Person.objects.get(pk=person), dinner=dinner, account=account)
 				person_to_dinner.save()
 				messages.add_message(request, messages.SUCCESS, person_to_dinner.person.name + " added to dinner on " + str(person_to_dinner.dinner.date))
 				return redirect('seating_chart.views.add_person_to_dinner')
 		elif delete:
 			person_to_dinner_to_delete = request.POST.get('delete')
-			person_to_dinner = PersonToDinner.objects.get(pk=person_to_dinner_to_delete)
+			person_to_dinner = PersonToDinner.objects.get(pk=person_to_dinner_to_delete, account=account)
 			name = person_to_dinner.person.name
 			person_to_dinner.delete()
 			messages.add_message(request, messages.SUCCESS, name + " deleted from dinner.")

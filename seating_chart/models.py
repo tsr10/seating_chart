@@ -1,29 +1,41 @@
 from django.db import models
+from django.contrib.auth.models import User
+
+class Account(models.Model):
+    user = models.ForeignKey(User)
 
 class Person(models.Model):
-	name = models.CharField(max_length=100)
+    account = models.ForeignKey(Account)
 
-	def __unicode__(self):
-	        return str(self.name)
+    first_name = models.CharField(max_length=100)
+    last_name = models.CharField(max_length=100)
+
+    def __unicode__(self):
+        return str(self.first_name) + " " + str(self.last_name)
+
+    def get_name(self):
+        return str(self.first_name) + " " + str(self.last_name)
 
 class Dinner(models.Model):
-	date = models.DateField(null=True, blank=True)
-	attendees = models.IntegerField(null=True, blank=True)
-	is_saved = models.BooleanField(default=False)
+    account = models.ForeignKey(Account)
 
-	def __unicode__(self):
-	        return str(self.date) + ": " + str(self.attendees) + " attendees"
+    date = models.DateField(null=True, blank=True)
+    attendees = models.IntegerField(null=True, blank=True)
+    is_saved = models.BooleanField(default=False)
 
-	def get_seat_numbers(self):
-		return range(0, self.attendees)
+    def __unicode__(self):
+            return str(self.date) + ": " + str(self.attendees) + " attendees"
 
-	def get_person_to_dinners(self):
-		return PersonToDinner.objects.filter(dinner=self)
+    def get_seat_numbers(self):
+        return range(0, self.attendees)
+
+    def get_person_to_dinners(self):
+        return PersonToDinner.objects.filter(dinner=self)
 
 class PersonToDinner(models.Model):
-	dinner = models.ForeignKey(Dinner)
-	person = models.ForeignKey(Person)
-	seat_number = models.IntegerField(null=True, blank=True)
+    dinner = models.ForeignKey(Dinner)
+    person = models.ForeignKey(Person)
+    seat_number = models.IntegerField(null=True, blank=True)
 
-	def __unicode__(self):
-	        return str(self.person.name) + ": " + str(self.dinner) + ", seat number: " + str(self.seat_number)
+    def __unicode__(self):
+            return str(self.person.name) + ": " + str(self.dinner) + ", seat number: " + str(self.seat_number)
