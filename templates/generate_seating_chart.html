@@ -5,36 +5,7 @@
 <form method="post">
 	{% csrf_token %}
 
-		Head:<br>
-		<select type='select' name='seat__head' />
-			{% for person_at_dinner in people_at_dinner %}
-			<option value='{{ person_at_dinner.person.pk }}' id='id__{{ seat_number }}__{{ person_at_dinner.person.pk }}'>{{ person_at_dinner.person.get_name }}</option>
-			{% endfor %}
-			<option value='empty'>EMPTY</option>
-		</select><br>
-		{% for pair in i %}
-		<select type='select' name='seat__{{ pair }}__left' />
-			{% for person_at_dinner in people_at_dinner %}
-			<option value='{{ person_at_dinner.person.pk }}' id='id__{{ seat_number }}__{{ person_at_dinner.person.pk }}'>{{ person_at_dinner.person.get_name }}</option>
-			{% endfor %}
-			<option value='empty'>EMPTY</option>
-		</select>
-		<select type='select' name='seat__{{ pair }}__right' />
-			{% for person_at_dinner in people_at_dinner %}
-			<option value='{{ person_at_dinner.person.pk }}' id='id__{{ seat_number }}__{{ person_at_dinner.person.pk }}'>{{ person_at_dinner.person.get_name }}</option>
-			{% endfor %}
-			<option value='empty'>EMPTY</option>
-		</select><br>
-		{% endfor %}
-		Foot:<br>
-		<select type='select' name='seat__foot' />
-			<option value='blank'>BLANK</option>
-			{% for person_at_dinner in people_at_dinner %}
-			<option value='{{ person_at_dinner.person.pk }}'>{{ person_at_dinner.person.get_name }}</option>
-			{% endfor %}
-		</select>
-
-	<br>
+	{% include 'forms/generic-form.html' %}
 
 	<input type='submit' value='Save' name='save' /><br>
 	<input type='submit' value='Generate' name='generate' /><br>

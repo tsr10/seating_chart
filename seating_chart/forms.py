@@ -7,26 +7,26 @@ import datetime
 
 #Controls the page where we add new people to an account
 class _AddPersonForm(forms.Form):
-	first_name = forms.CharField(max_length=100, required=True)
-	last_name = forms.CharField(max_length=100, required=True)
+    first_name = forms.CharField(max_length=100, required=True)
+    last_name = forms.CharField(max_length=100, required=True)
 
-	def clean(self):
-		super(_AddPersonForm, self).clean()
+    def clean(self):
+        super(_AddPersonForm, self).clean()
 
-		first_name = self.cleaned_data.get('first_name', None)
-		last_name = self.cleaned_data.get('last_name', None)
+        first_name = self.cleaned_data.get('first_name', None)
+        last_name = self.cleaned_data.get('last_name', None)
 
-		if Person.objects.filter(first_name__iexact=first_name, last_name__iexact=last_name, account=self._account).exists():
-			raise forms.ValidationError('This person is already in your account')
+        if Person.objects.filter(first_name__iexact=first_name, last_name__iexact=last_name, account=self._account).exists():
+            raise forms.ValidationError('This person is already in your account')
 
-		return self.cleaned_data
+        return self.cleaned_data
 
 def add_person_form_factory(account):
 
-	class Form(_AddPersonForm):
-		_account = account
+    class Form(_AddPersonForm):
+        _account = account
 
-	return Form
+    return Form
 
 #Controls the page where we add new dinners.
 class _AddDinnerForm(forms.Form):
@@ -39,32 +39,55 @@ class _AddDinnerForm(forms.Form):
 
 def add_dinner_form_factory(account):
 
-	class Form(_AddDinnerForm):
-		_account = account
+    class Form(_AddDinnerForm):
+        _account = account
 
-	return Form
+    return Form
 
 #Controls the page where we add people to dinners.
 class _AddPersonToDinnerForm(forms.Form):
-	pass
+    pass
 
-	def clean(self):
-		super(_AddPersonToDinnerForm, self).clean()
+    def clean(self):
+        super(_AddPersonToDinnerForm, self).clean()
 
-		person = self.cleaned_data.get('person', None)
-		dinner = self._dinner
+        person = self.cleaned_data.get('person', None)
+        dinner = self._dinner
 
-		if PersonToDinner.objects.filter(person=person, dinner=dinner).exists():
-			raise forms.ValidationError("This person is already attached to this dinner!")
+        if PersonToDinner.objects.filter(person=person, dinner=dinner).exists():
+            raise forms.ValidationError("This person is already attached to this dinner!")
 
-		return self.cleaned_data
+        return self.cleaned_data
 
 def add_person_to_dinner_form_factory(dinner, account):
 
-	class Form(_AddPersonToDinnerForm):
-		person = forms.ModelChoiceField(Person.objects.filter(account=account))
-		_dinner = dinner
+    class Form(_AddPersonToDinnerForm):
+        person = forms.ModelChoiceField(Person.objects.filter(account=account))
+        _dinner = dinner
 
-	return Form
+    return Form
+
+class _GenerateSeatingChartForm(forms.Form):
+    pass
+
+def generate_seating_chart_form_factory(dinner):
+
+    class Form(_GenerateSeatingChartForm):
+        def __init__(self, *args, **kwargs):
+            super(Form, self).__init__(*args, **kwargs)
+            for i in range(0, dinner.number_of_pairs()):
+                self.fields['seat__' + str(i) + '__left'] = forms.ModelChoiceField(PersonToDinner.objects.filter(dinner=dinner), required=True)
+                self.fields['seat__' + str(i) + '__right'] = forms.ModelChoiceField(PersonToDinner.objects.filter(dinner=dinner), required=True)
+
+        _dinner = dinner
+        head = forms.ModelChoiceField(PersonToDinner.objects.filter(dinner=dinner), required=True)
+        foot = forms.ModelChoiceField(PersonToDinner.objects.filter(dinner=dinner), required=True)
+
+    return Form
+
+
+
+
+
 
 

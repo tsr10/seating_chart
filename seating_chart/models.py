@@ -37,6 +37,15 @@ class Dinner(models.Model):
     def attendees(self):
         return self.get_person_to_dinners().count()
 
+    def number_of_pairs(self):
+        attendees = self.attendees()
+        if attendees <= 2:
+            return 0
+        elif attendees % 2 == 0:
+            return attendees/2 - 1
+        else:
+            return attendees/2
+
     def get_left_side(self):
         if dinner.is_saved():
             head = PersonToDinner.objects.get(dinner=dinner, is_head=True)
@@ -71,4 +80,5 @@ class PersonToDinner(models.Model):
     is_foot = models.BooleanField(default=False)
 
     def __unicode__(self):
-            return str(self.person.get_name()) + ": " + str(self.dinner) + ", seat number: " + str(self.seat_number)
+            return str(self.person.get_name()) + ": " + str(self.dinner)
+

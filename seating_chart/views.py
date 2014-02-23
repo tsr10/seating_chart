@@ -2,7 +2,7 @@ from django.contrib import messages
 from django.shortcuts import render_to_response, redirect
 from django.template import RequestContext
 
-from seating_chart.forms import add_person_form_factory, add_dinner_form_factory, add_person_to_dinner_form_factory
+from seating_chart.forms import add_person_form_factory, add_dinner_form_factory, add_person_to_dinner_form_factory, generate_seating_chart_form_factory
 from seating_chart.models import Person, Dinner, PersonToDinner, Account
 from seating_chart.utils import get_placed_seats, all_seats_filled, create_new_working_seating_chart, generate_random_seat_list, check_to_see_if_list_works, create_new_working_seating_chart, get_all_dinners
 
@@ -20,46 +20,20 @@ def generate_seating_chart(request, pk):
 
 	people_at_dinner = PersonToDinner.objects.filter(dinner=dinner)
 
-	i = (dinner.attendees() - 2 + 1)/2
+	Form = generate_seating_chart_form_factory(dinner=dinner)
 
-	if request.method == 'POST' and error == False:
-		placed_seats = get_placed_seats(request_dict=request.POST)
-		generate = request.POST.get('generate')
-		save = request.POST.get('save')
-		reset = request.POST.get('reset')
-		if generate:
-			previous_dinners = Dinner.objects.filter(is_saved=True)
-			if not error:
-				does_list_work = False
-				seat_list = generate_random_seat_list(placed_seats=placed_seats, dinner=dinner, diners=people_at_dinner)
-				does_list_work = check_to_see_if_list_works(seat_list=seat_list, placed_diners=placed_seats)
-				if does_list_work:
-					i = 0
-					for person in seat_list:
-						person_to_dinner = PersonToDinner.objects.get(dinner=dinner, person=person, account=account)
-						person_to_dinner.seat_number = i
-						i += 1
-						person_to_dinner.save()
-		if save:
-			if not all_seats_filled(placed_seats=placed_seats, dinner=dinner):
-				messages.add_message(request, messages.ERROR, "Check to make sure all seats are placed.")
-				error = True
-			else:
-				dinner.is_saved = True
-				dinner.save()
-				return redirect('seating_chart.views.add_dinner')
-		if reset:
-			for person_to_dinner in PersonToDinner.objects.filter(dinner=dinner):
-				person_to_dinner.seat_number = None
-				person_to_dinner.save()
-			return redirect('seating_chart.views.generate_seating_chart')
-
-	post_dict = {'people_at_dinner' : people_at_dinner,
-	'account' : account,
-	'i' : range(1, i + 1),}
+	if request.method == 'POST':
+		form = Form(request.POST)
+		if form.is_valid():
+			dinner.is_saved = True
+			dinner.save()
+			messages.add_message(request, messages.SUCCESS, "Dinner saved.")
+	else:
+		form = Form()
 
 	return render_to_response('generate_seating_chart.html',
-		post_dict,
+		{'form' : form,
+		'account' : account,},
 		context_instance=RequestContext(request))
 
 def add_person(request):
