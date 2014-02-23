@@ -1,0 +1,7 @@
+<select type='select' name='seat__{{ seat_number }}' />
+	<option value='blank'>BLANK</option>
+	{% for person_at_dinner in people_at_dinner %}
+	<option value='{{ person_at_dinner.person.pk }}' id='id__{{ seat_number }}__{{ person_at_dinner.person.pk }}'>{{ person_at_dinner.person.get_name }}</option>
+	{% endfor %}
+	<option value='empty'>EMPTY</option>
+</select>

@@ -7,7 +7,7 @@ def get_placed_seats(request_dict):
 	Gets all of the seats that have been pre-placed by the event planner.
 	"""
 	placed_seats = {}
-	for i in range(0, 1000):
+	for i in range(0, 100):
 		seat = request_dict.get('seat__' + str(i))
 		if seat and seat != 'blank':
 			placed_seats[str(i)] = Person.objects.get(pk=seat)

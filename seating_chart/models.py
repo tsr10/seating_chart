@@ -37,6 +37,29 @@ class Dinner(models.Model):
     def attendees(self):
         return self.get_person_to_dinners().count()
 
+    def get_left_side(self):
+        if dinner.is_saved():
+            head = PersonToDinner.objects.get(dinner=dinner, is_head=True)
+            left_side = []
+            head_left_neighbor = head.left_neighbor
+            while head_left_neighbor.is_foot == False:
+                left_side.append(head_left_neighbor)
+                head_left_neighbor = head_left_neighbor.left_neighbor
+            return left_side
+        return None
+
+    def get_right_side(self):
+        if dinner.is_saved():
+            head = PersonToDinner.objects.get(dinner=dinner, is_head=True)
+            left_side = []
+            head_right_neighbor = head.right_neighbor
+            while head_right_neighbor.is_foot == False:
+                right_side.append(head_right_neighbor)
+                head_right_neighbor = head_right_neighbor.right_neighbor
+            return right_side
+        return None
+
+
 class PersonToDinner(models.Model):
     dinner = models.ForeignKey(Dinner)
     person = models.ForeignKey(Person)
@@ -44,8 +67,8 @@ class PersonToDinner(models.Model):
     left_neighbor = models.ForeignKey('self', null=True, related_name='left_neighbor_at_dinner')
     right_neighbor = models.ForeignKey('self', null=True, related_name='right_neighbor_at_dinner')
 
-    head = models.BooleanField(default=False)
-    foot = models.BooleanField(default=False)
+    is_head = models.BooleanField(default=False)
+    is_foot = models.BooleanField(default=False)
 
     def __unicode__(self):
             return str(self.person.get_name()) + ": " + str(self.dinner) + ", seat number: " + str(self.seat_number)

@@ -20,6 +20,8 @@ def generate_seating_chart(request, pk):
 
 	people_at_dinner = PersonToDinner.objects.filter(dinner=dinner)
 
+	i = (dinner.attendees() - 2 + 1)/2
+
 	if request.method == 'POST' and error == False:
 		placed_seats = get_placed_seats(request_dict=request.POST)
 		generate = request.POST.get('generate')
@@ -53,7 +55,8 @@ def generate_seating_chart(request, pk):
 			return redirect('seating_chart.views.generate_seating_chart')
 
 	post_dict = {'people_at_dinner' : people_at_dinner,
-	'account' : account,}
+	'account' : account,
+	'i' : range(1, i + 1),}
 
 	return render_to_response('generate_seating_chart.html',
 		post_dict,
