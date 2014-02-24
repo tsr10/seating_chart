@@ -33,7 +33,8 @@ def generate_seating_chart(request, pk):
 
 	return render_to_response('generate_seating_chart.html',
 		{'form' : form,
-		'account' : account,},
+		'account' : account,
+		'dinner' : dinner,},
 		context_instance=RequestContext(request))
 
 def add_person(request):

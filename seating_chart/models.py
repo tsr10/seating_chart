@@ -46,6 +46,9 @@ class Dinner(models.Model):
         else:
             return attendees/2
 
+    def pairs_list(self):
+        return range(0, self.number_of_pairs())
+
     def get_left_side(self):
         if dinner.is_saved():
             head = PersonToDinner.objects.get(dinner=dinner, is_head=True)
