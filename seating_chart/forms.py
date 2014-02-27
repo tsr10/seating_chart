@@ -62,26 +62,69 @@ class _AddPersonToDinnerForm(forms.Form):
 def add_person_to_dinner_form_factory(dinner, account):
 
     class Form(_AddPersonToDinnerForm):
-        person = forms.ModelChoiceField(Person.objects.filter(account=account))
+        person = forms.ModelChoiceField(Person.objects.filter(account=account).exclude(persontodinner__dinner=dinner))
         _dinner = dinner
 
     return Form
 
-class _GenerateSeatingChartForm(forms.Form):
-    pass
+class _ArrangeSeatingChartForm(forms.Form):
+    
+    def clean(self):
+        super(_ArrangeSeatingChartForm, self).clean()
 
-def generate_seating_chart_form_factory(dinner):
+        seat_list = []
 
-    class Form(_GenerateSeatingChartForm):
+        head = self.cleaned_data.get('head', None)
+        foot = self.cleaned_data.get('foot', None)
+        dinner = self._dinner
+
+        if head:
+            person_to_dinner = head
+            person_to_dinner.seat_number = 'head'
+            person_to_dinner.is_head = True
+            seat_list.append(person_to_dinner)
+
+        if foot:
+            person_to_dinner = foot
+            person_to_dinner.seat_number = 'foot'
+            person_to_dinner.is_foot = True
+            seat_list.append(person_to_dinner)
+
+        for i in range(0, dinner.number_of_pairs()):
+            left_seat = self.cleaned_data.get('seat__' + str(i) + '__left', None)
+            right_seat = self.cleaned_data.get('seat__' + str(i) + '__right', None)
+
+            if left_seat:
+                person_to_dinner = left_seat
+                person_to_dinner.seat_number = str(i) + '__left'
+                seat_list.append(person_to_dinner)
+
+            if right_seat:
+                person_to_dinner = right_seat
+                person_to_dinner.seat_number = str(i) + '__right'
+                seat_list.append(person_to_dinner)
+
+        if len(seat_list) != len(set(seat_list)):
+            raise forms.ValidationError('The same diner has been assigned to a seat twice. Please check your inputs.')
+        
+        for person_to_dinner in seat_list:
+            person_to_dinner.save()
+
+        return self.cleaned_data
+
+
+def arrange_seating_chart_form_factory(dinner):
+
+    class Form(_ArrangeSeatingChartForm):
         def __init__(self, *args, **kwargs):
             super(Form, self).__init__(*args, **kwargs)
             for i in range(0, dinner.number_of_pairs()):
-                self.fields['seat__' + str(i) + '__left'] = forms.ModelChoiceField(PersonToDinner.objects.filter(dinner=dinner), required=True)
-                self.fields['seat__' + str(i) + '__right'] = forms.ModelChoiceField(PersonToDinner.objects.filter(dinner=dinner), required=True)
+                self.fields['seat__' + str(i) + '__left'] = forms.ModelChoiceField(PersonToDinner.objects.filter(dinner=dinner), required=False)
+                self.fields['seat__' + str(i) + '__right'] = forms.ModelChoiceField(PersonToDinner.objects.filter(dinner=dinner), required=False)
 
         _dinner = dinner
-        head = forms.ModelChoiceField(PersonToDinner.objects.filter(dinner=dinner), required=True)
-        foot = forms.ModelChoiceField(PersonToDinner.objects.filter(dinner=dinner), required=True)
+        head = forms.ModelChoiceField(PersonToDinner.objects.filter(dinner=dinner), required=False)
+        foot = forms.ModelChoiceField(PersonToDinner.objects.filter(dinner=dinner), required=False)
 
     return Form
 

@@ -1,6 +1,8 @@
 from django.conf.urls import patterns, include, url
 
 urlpatterns = patterns('',
+    url(r'^arrange_seating_chart/(?P<pk>\d+)$', 'seating_chart.views.arrange_seating_chart', name='arrange_seating_chart'),
+
     url(r'^generate_seating_chart/(?P<pk>\d+)$', 'seating_chart.views.generate_seating_chart', name='generate_seating_chart'),
 
     url(r'^add_person$', 'seating_chart.views.add_person', name='add_person'),

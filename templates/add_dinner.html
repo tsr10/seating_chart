@@ -15,21 +15,7 @@ Current dinners in DB:<br>
 			Attending: {{ person_to_dinner.person }}<br>
 		{% endfor %}
 	{% else %}
-		{% for seat_number in dinner.get_seat_numbers %}
-			{% if forloop.counter|add:-1 == 0 %}
-			Head:
-			{% elif forloop.counter == dinner.attendees %}
-			<br>
-			Foot:
-			{% endif %}
-			{{ seat_number }}
-			{% for person_at_dinner in dinner.get_person_to_dinners %}
-				{% if person_at_dinner.seat_number == seat_number %}{{ person_at_dinner.person.name }}{% endif %}
-			{% endfor %}
-			{% if not forloop.counter|divisibleby:2 %}
-			<br>
-			{% endif %}
-		{% endfor %}
+		{{ dinner.display_arranged_dinner|safe }}
 	{% endif %}
 {% endfor %}
 

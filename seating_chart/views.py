@@ -2,14 +2,14 @@ from django.contrib import messages
 from django.shortcuts import render_to_response, redirect
 from django.template import RequestContext
 
-from seating_chart.forms import add_person_form_factory, add_dinner_form_factory, add_person_to_dinner_form_factory, generate_seating_chart_form_factory
+from seating_chart.forms import add_person_form_factory, add_dinner_form_factory, add_person_to_dinner_form_factory, arrange_seating_chart_form_factory
 from seating_chart.models import Person, Dinner, PersonToDinner, Account
 from seating_chart.utils import get_placed_seats, all_seats_filled, create_new_working_seating_chart, generate_random_seat_list, check_to_see_if_list_works, create_new_working_seating_chart, get_all_dinners
 
 def home(request):
 	return redirect('seating_chart.views.add_person')
 
-def generate_seating_chart(request, pk):
+def arrange_seating_chart(request, pk):
 	"""
 	Generates the seating chart. You can only use these commands if you've assigned enough people to this
 	dinner already.
@@ -18,24 +18,57 @@ def generate_seating_chart(request, pk):
 
 	dinner = Dinner.objects.get(pk=pk)
 
+	dinner = dinner.reset_dinner()
+
 	people_at_dinner = PersonToDinner.objects.filter(dinner=dinner)
 
-	Form = generate_seating_chart_form_factory(dinner=dinner)
+	Form = arrange_seating_chart_form_factory(dinner=dinner)
 
 	if request.method == 'POST':
 		form = Form(request.POST)
 		if form.is_valid():
-			dinner.is_saved = True
-			dinner.save()
-			messages.add_message(request, messages.SUCCESS, "Dinner saved.")
+			return redirect('seating_chart.views.generate_seating_chart', pk=dinner.pk)
 	else:
 		form = Form()
 
-	return render_to_response('generate_seating_chart.html',
+	return render_to_response('arrange_seating_chart.html',
 		{'form' : form,
 		'account' : account,
 		'dinner' : dinner,},
 		context_instance=RequestContext(request))
+
+def generate_seating_chart(request, pk):
+	"""
+	Generates the seating chart and outputs it to a form.
+	"""
+
+	account = Account.objects.filter()[0]
+
+	dinner = Dinner.objects.get(pk=pk)
+
+	people_not_seated = list(set(PersonToDinner.objects.filter(dinner=dinner, seat_number='')))
+
+	available_seats = dinner.get_available_seats()
+
+	for i in range(0, min(len(available_seats), len(people_not_seated))):
+		people_not_seated[i].seat_number = str(available_seats[i])
+		if available_seats[i] == 'head':
+			people_not_seated[i].is_head = True
+		elif available_seats[i] == 'foot':
+			people_not_seated[i].is_foot = True
+		people_not_seated[i].save()
+
+	head, pairs_list, foot = dinner.get_arranged_dinner()
+	save_neighbors = dinner.save_neighbors()
+
+	return render_to_response('generate_seating_chart.html',
+		{'head' : head,
+		'pairs_list' : pairs_list,
+		'foot' : foot,
+		'account' : account,
+		'dinner' : dinner,},
+		context_instance=RequestContext(request))
+
 
 def add_person(request):
 	"""
