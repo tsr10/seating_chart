@@ -15,21 +15,27 @@ def make_new_seating_chart(dinner):
 	'''
 	The seating chart generating function.
 	'''
-	old_dinner_list = [old_dinner for old_dinner in Dinner.objects.filter(account=dinner.account).exclude(pk=dinner.pk).order_by('-date')]
+	old_dinner_list = [old_dinner.pk for old_dinner in Dinner.objects.filter(account=dinner.account).exclude(pk=dinner.pk).order_by('-date')]
+	old_dinners_dict = {}
+	for old_dinner_pk in old_dinner_list:
+		old_dinner_dict = {}
+		for person_to_dinner in PersonToDinner.objects.filter(dinner__pk=old_dinner):
+			old_dinner_dict[str(person_to_dinner.person.pk)] = (person_to_dinner.left_neighbor.person, person_to_dinner.right_neighbor.person)
+		old_dinners_dict[str(old_dinner_pk)] = old_dinner_dict
+	all_person_to_dinners_at_dinner = PersonToDinner.objects.filter(dinner=dinner)
 	available_seats = dinner.get_available_seats()
 	validated = False
 	i = 0
 	while not validated:
 		while i < 100:
 			dinner = get_random_seating_arrangement(dinner=dinner, available_seats=available_seats)
-			if not validate_against_dinners(current_dinner=dinner, old_dinner_list=old_dinner_list):
+			if not validate_against_dinners(current_dinner=dinner, old_dinners_dict=old_dinners_dict, all_person_to_dinners_at_dinner=all_person_to_dinners_at_dinner):
 				i += 1
 			else:
 				validated = True
 				break
 		i = 0
 		old_dinner_list.pop()
-		print old_dinner_list
 	dinner.is_saved = True
 	dinner.save()
 	return dinner
@@ -48,16 +54,17 @@ def get_random_seating_arrangement(dinner, available_seats):
 	dinner = dinner.save_neighbors()
 	return dinner
 
-def validate_against_dinners(current_dinner, old_dinner_list):
+def validate_against_dinners(current_dinner, old_dinner_list, old_dinners_dict, all_person_to_dinners_at_dinner):
 	'''
 	Checks to see if our current arrangement is valid against all of the dinners we're currently checking against.
 	'''
-	for person_to_dinner in PersonToDinner.objects.filter(dinner=current_dinner):
-		for old_dinner in old_dinner_list:
-			if PersonToDinner.objects.filter(dinner=old_dinner, person=person_to_dinner.person).exists():
-				old_person_to_dinner = PersonToDinner.objects.get(dinner=old_dinner, person=person_to_dinner.person)
-				if is_overlap(person_to_dinner=person_to_dinner, old_person_to_dinner=old_person_to_dinner):
-					return False
+	for person_to_dinner in all_person_to_dinners_at_dinner:
+		for old_dinner_pk in old_dinner_list:
+			if old_dinner_pk in old_dinners_dict:
+				if person_to_dinner.person.pk in old_dinners_dict[str(old_dinner_pk)]:
+					old_person_to_dinner = old_dinners_dict[str(old_dinner_pk)][str(person_to_dinner.person.pk)]
+					if is_overlap(person_to_dinner=person_to_dinner, old_person_to_dinner=old_person_to_dinner):
+						return False
 	return True
 
 def is_overlap(person_to_dinner, old_person_to_dinner):
