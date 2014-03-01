@@ -4,7 +4,7 @@ from django.template import RequestContext
 
 from seating_chart.forms import add_person_form_factory, add_dinner_form_factory, add_person_to_dinner_form_factory, arrange_seating_chart_form_factory
 from seating_chart.models import Person, Dinner, PersonToDinner, Account
-from seating_chart.utils import get_placed_seats, all_seats_filled, create_new_working_seating_chart, generate_random_seat_list, check_to_see_if_list_works, create_new_working_seating_chart, get_all_dinners
+from seating_chart.utils import make_new_seating_chart
 
 def home(request):
 	return redirect('seating_chart.views.add_person')
@@ -46,20 +46,9 @@ def generate_seating_chart(request, pk):
 
 	dinner = Dinner.objects.get(pk=pk)
 
-	people_not_seated = list(set(PersonToDinner.objects.filter(dinner=dinner, seat_number='')))
-
-	available_seats = dinner.get_available_seats()
-
-	for i in range(0, min(len(available_seats), len(people_not_seated))):
-		people_not_seated[i].seat_number = str(available_seats[i])
-		if available_seats[i] == 'head':
-			people_not_seated[i].is_head = True
-		elif available_seats[i] == 'foot':
-			people_not_seated[i].is_foot = True
-		people_not_seated[i].save()
+	dinner = make_new_seating_chart(dinner=dinner)
 
 	head, pairs_list, foot = dinner.get_arranged_dinner()
-	save_neighbors = dinner.save_neighbors()
 
 	return render_to_response('generate_seating_chart.html',
 		{'head' : head,
@@ -113,7 +102,7 @@ def add_dinner(request):
 	else:
 		form = Form()
 
-	dinners = get_all_dinners()
+	dinners = Dinner.objects.filter(account=account).order_by('-date')
 
 	return render_to_response('add_dinner.html',
 		{'dinners' : dinners,

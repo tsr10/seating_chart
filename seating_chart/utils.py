@@ -2,145 +2,73 @@ from seating_chart.models import Person, PersonToDinner, Dinner
 
 from random import shuffle
 
-def get_placed_seats(request_dict):
-	"""
-	Gets all of the seats that have been pre-placed by the event planner.
-	"""
-	placed_seats = {}
-	for i in range(0, 100):
-		seat = request_dict.get('seat__' + str(i))
-		if seat and seat != 'blank':
-			placed_seats[str(i)] = Person.objects.get(pk=seat)
-	return placed_seats
 
-def all_seats_filled(placed_seats, dinner):
-	"""
-	Checks to make sure that all of the seats are populated before saving.
-	"""
-	i = 0
-	for placed_seat, person in placed_seats.items():
-		i += 1
-	if i == dinner.attendees:
-		return True
-	return False
-
-def check_to_see_if_list_works(seat_list, placed_diners):
-	"""
-	We check against previous dinners to make sure that all randomly placed diners are not next to someone
-	that they have not already sat next to.
-	"""
-	error = False
-	i = 0
-	for person in seat_list:
-		if not is_a_placed_diner:
-			for previous_dinner in Dinner.objects.filter(is_saved=True).order_by('-date'):
-				if PersonToDinner.objects.filter(person=person, dinner=previous_dinner).exists():
-					seat_number_at_previous_dinner = PersonToDinner.objects.filter(person=person, dinner=previous_dinner)[0].seat_number
-					previous_left_neighbor = get_left_neighbor(dinner=previous_dinner, diner=person)
-					previous_right_neighbor = get_right_neighbor(dinner=previous_dinner, diner=person)
-					if i == 0:
-						proposed_left_neighbor = seat_list[seat_list.length() - 1]
-					else:
-						proposed_left_neighbor = seat_list[i - 1]
-					if i == seat_list[seat_list.length() - 1]:
-						proposed_right_neighbor = seat_list[0]
-					else:
-						proposed_right_neighbor = seat_list[i + 1]
-					if proposed_left_neighbor == current_left_neighbor or proposed_right_neighbor == current_right_neighbor:
-						error = True
-		i += 1
-	if not error:
-		return True
-	else:
-		return False
-
-def generate_random_seat_list(placed_seats, dinner, diners):
-	"""
-	Makes our random list of diners, placing the already-placed diners where they belong.
-	"""
-	seat_list = []
-	random_list_of_unplaced_diners = get_random_list_of_unplaced_diners(dinner=dinner, placed_seats=placed_seats)
-	for i in range(0, dinner.attendees):
-		if str(i) in placed_seats:
-			seat_list.append(placed_seats[str(i)])
-		else:
-			seat_list.append(random_list_of_unplaced_diners.pop())
-	return seat_list
-
-def get_unplaced_diners(dinner, placed_seats):
-	"""
-	Gets only those diners for a particular dinner who have not yet been placed.
-	"""
-	person_to_dinners = PersonToDinner.objects.filter(dinner=dinner)
-	people = []
-	for person_to_dinner in person_to_dinners:
-		people.append(person_to_dinner.person)
-	placed_diners = []
-	for placed_seat, person in placed_seats.items():
-		placed_diners.append(person)
-	unplaced_diners = list(set(people) - set(placed_diners))
-	return list(set(people) - set(placed_diners))
-
-def get_random_list_of_unplaced_diners(dinner, placed_seats):
+def get_random_list_of_unplaced_diners(dinner):
 	"""
 	Creates the random list of diners that have not been assigned seats.
 	"""
-	unplaced_diners = get_unplaced_diners(dinner=dinner, placed_seats=placed_seats)
+	unplaced_diners = list(set(PersonToDinner.objects.filter(manually_placed_diner=False, dinner=dinner)))
 	shuffle(unplaced_diners)
 	return unplaced_diners
 
-def is_a_placed_diner(placed_seats, diner):
-	"""
-	Checks to see if a particular diner is one of those who has already been assigned a seat by the host.
-	"""
-	for placed_seat, person in placed_seats.items():
-		if person == diner:
+def make_new_seating_chart(dinner):
+	'''
+	The seating chart generating function.
+	'''
+	old_dinner_list = [old_dinner for old_dinner in Dinner.objects.filter(account=dinner.account).exclude(pk=dinner.pk).order_by('-date')]
+	available_seats = dinner.get_available_seats()
+	validated = False
+	i = 0
+	while not validated:
+		while i < 100:
+			dinner = get_random_seating_arrangement(dinner=dinner, available_seats=available_seats)
+			if not validate_against_dinners(current_dinner=dinner, old_dinner_list=old_dinner_list):
+				i += 1
+			else:
+				validated = True
+				break
+		i = 0
+		old_dinner_list.pop()
+		print old_dinner_list
+	dinner.is_saved = True
+	dinner.save()
+	return dinner
+
+def get_random_seating_arrangement(dinner, available_seats):
+	unplaced_diners = get_random_list_of_unplaced_diners(dinner=dinner)
+	for i in range(0, len(unplaced_diners)):
+		unplaced_diners[i].seat_number = available_seats[i]
+		unplaced_diners[i].is_head = False
+		unplaced_diners[i].is_foot = False
+		if available_seats[i] == 'head':
+			unplaced_diners[i].is_head = True
+		elif available_seats[i] == 'foot':
+			unplaced_diners[i].is_foot = True
+		unplaced_diners[i].save()
+	dinner = dinner.save_neighbors()
+	return dinner
+
+def validate_against_dinners(current_dinner, old_dinner_list):
+	'''
+	Checks to see if our current arrangement is valid against all of the dinners we're currently checking against.
+	'''
+	for person_to_dinner in PersonToDinner.objects.filter(dinner=current_dinner):
+		for old_dinner in old_dinner_list:
+			if PersonToDinner.objects.filter(dinner=old_dinner, person=person_to_dinner.person).exists():
+				old_person_to_dinner = PersonToDinner.objects.get(dinner=old_dinner, person=person_to_dinner.person)
+				if is_overlap(person_to_dinner=person_to_dinner, old_person_to_dinner=old_person_to_dinner):
+					return False
+	return True
+
+def is_overlap(person_to_dinner, old_person_to_dinner):
+	'''
+	Sees if two people are excluded from sitting next to each other because of an old dinner. This does not apply to manually placed
+	diners, as if two people must sit together it does not matter if they sat next to one another before.
+	'''
+	if not person_to_dinner.manually_placed_diner or not person_to_dinner.left_neighbor.manually_placed_diner:
+		if person_to_dinner.left_neighbor.person == old_person_to_dinner.left_neighbor.person or person_to_dinner.left_neighbor.person == old_person_to_dinner.right_neighbor.person:
+			return True
+	if not person_to_dinner.manually_placed_diner or not person_to_dinner.right_neighbor.manually_placed_diner:
+		if person_to_dinner.right_neighbor.person == old_person_to_dinner.left_neighbor.person or person_to_dinner.right_neighbor.person == old_person_to_dinner.right_neighbor.person:
 			return True
 	return False
-
-def get_left_neighbor(dinner, person):
-	"""
-	Gets a diner's left neighbor at a particular dinner.
-	"""
-	seat_number = PersonToDinner.objects.filter(person=person, dinner=dinner).seat_number
-	if seat_number == 0:
-		left_neighbor = PersonToDinner.objects.filter(person=person, dinner=dinner, seat_number=2)[0]
-	elif seat_number == dinner.attendees - 1:
-		left_neighbor = PersonToDinner.objects.filter(person=person, dinner=dinner, seat_number=seat_number-2)[0]
-	elif seat_number == 1:
-		left_neighbor = PersonToDinner.objects.filter(person=person, dinner=dinner, seat_number=0)[0]
-	else: 
-		left_neighbor = PersonToDinner.objects.filter(person=person, dinner=dinner, seat_number=seat_number-2)[0]
-	return left_neighbor
-
-def get_right_neighbor(dinner, person):
-	"""
-	Gets a diner's right neighbor at a particular dinner.
-	"""
-	seat_number = PersonToDinner.objects.filter(person=person, dinner=dinner).seat_number
-	if seat_number == 0:
-		right_neighbor = PersonToDinner.objects.filter(person=person, dinner=dinner, seat_number=seat_number + 1)[0]
-	elif seat_number == dinner.attendees - 1:
-		if dinner.attendees % 2 == 1:
-			right_neighbor = PersonToDinner.objects.filter(person=person, dinner=dinner, seat_number=seat_number - 2)[0]
-		else:
-			right_neighbor = PersonToDinner.objects.filter(person=person, dinner=dinner, seat_number=seat_number - 2)[0]
-	elif seat_number == dinner.attendees-2 and dinner.attendees % 2 == 1:
-		right_neighbor = PersonToDinner.objects.filter(person=person, dinner=dinner, seat_number=seat_number + 1)[0]
-	else: 
-		right_neighbor = PersonToDinner.objects.filter(person=person, dinner=dinner, seat_number=seat_number+2)[0]
-	return right_neighbor
-
-def create_new_working_seating_chart(seat_list):
-	"""
-	Generates the new seating chart by creating the proper dictionary that can be rendered to the template.
-	"""
-	i = 0
-	placed_seats = {}
-	for seat in seat_list:
-		placed_seats[str(i)] = seat
-		i += 1
-	return placed_seats
-
-def get_all_dinners():
-	return Dinner.objects.filter().order_by('-date')

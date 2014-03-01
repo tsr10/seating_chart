@@ -117,8 +117,9 @@ class Dinner(models.Model):
         left_side_left_neighbor.right_neighbor = foot
         foot.right_neighbor = right_side_right_neighbor
         right_side_right_neighbor.left_neighbor = foot
-        self.is_saved = True
-        self.save()
+        foot.save()
+        right_side_right_neighbor.save()
+        left_side_left_neighbor.save()
         return self
 
     def reset_dinner(self):
@@ -133,7 +134,6 @@ class Dinner(models.Model):
         self.save()
         return self
 
-
 class PersonToDinner(models.Model):
     dinner = models.ForeignKey(Dinner)
     person = models.ForeignKey(Person)
@@ -145,6 +145,8 @@ class PersonToDinner(models.Model):
 
     is_head = models.BooleanField(default=False)
     is_foot = models.BooleanField(default=False)
+
+    manually_placed_diner = models.BooleanField(default=False)
 
     def __unicode__(self):
             return str(self.person.get_name()) + ": " + str(self.dinner)

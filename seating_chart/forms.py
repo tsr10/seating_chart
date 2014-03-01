@@ -16,8 +16,9 @@ class _AddPersonForm(forms.Form):
         first_name = self.cleaned_data.get('first_name', None)
         last_name = self.cleaned_data.get('last_name', None)
 
-        if Person.objects.filter(first_name__iexact=first_name, last_name__iexact=last_name, account=self._account).exists():
-            raise forms.ValidationError('This person is already in your account')
+        if first_name and last_name:
+            if Person.objects.filter(first_name__iexact=first_name, last_name__iexact=last_name, account=self._account).exists():
+                raise forms.ValidationError('This person is already in your account')
 
         return self.cleaned_data
 
@@ -82,12 +83,14 @@ class _ArrangeSeatingChartForm(forms.Form):
             person_to_dinner = head
             person_to_dinner.seat_number = 'head'
             person_to_dinner.is_head = True
+            person_to_dinner.manually_placed_diner = True
             seat_list.append(person_to_dinner)
 
         if foot:
             person_to_dinner = foot
             person_to_dinner.seat_number = 'foot'
             person_to_dinner.is_foot = True
+            person_to_dinner.manually_placed_diner = True
             seat_list.append(person_to_dinner)
 
         for i in range(0, dinner.number_of_pairs()):
@@ -108,6 +111,7 @@ class _ArrangeSeatingChartForm(forms.Form):
             raise forms.ValidationError('The same diner has been assigned to a seat twice. Please check your inputs.')
         
         for person_to_dinner in seat_list:
+            person_to_dinner.manually_placed_diner = True
             person_to_dinner.save()
 
         return self.cleaned_data
