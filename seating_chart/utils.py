@@ -42,6 +42,9 @@ def make_new_seating_chart(dinner):
     return dinner
 
 def get_random_seating_arrangement(dinner, available_seats, all_person_to_dinners_at_dinner):
+    '''
+    Generates a random seating arrangement.
+    '''
     unplaced_diners = get_random_list_of_unplaced_diners(dinner=dinner, all_person_to_dinners_at_dinner=all_person_to_dinners_at_dinner)
     placed_diners = all_person_to_dinners_at_dinner.filter(manually_placed_diner=True)
     i = 0
@@ -88,6 +91,9 @@ def is_overlap(person_to_dinner, old_person_to_dinner):
     return False
 
 def get_neighbors(diner_dict):
+    '''
+    Populates and passes a list of the diners with their neighbors.
+    '''
     head = diner_dict.get('head')
     head.left_neighbor = None
     head.right_neighbor = None
@@ -113,6 +119,9 @@ def get_neighbors(diner_dict):
     return filled_list
 
 def fill_neighbors(head, foot, pairs_list):
+    '''
+    The actual populating part of the function.
+    '''
     diner_list = []
     left_side_left_neighbor = head
     right_side_right_neighbor = head
@@ -141,6 +150,9 @@ def fill_neighbors(head, foot, pairs_list):
     return diner_list
 
 def number_of_pairs(diner_dict):
+    '''
+    Counts the number of pairs of diners along the sides of the table there will be.
+    '''
     attendees = len(diner_dict.items())
     if attendees <= 2:
         return 0
@@ -148,3 +160,25 @@ def number_of_pairs(diner_dict):
         return attendees/2 - 1
     else:
         return attendees/2
+
+def create_possible_neighbor_dict(diners, past_dinners=None):
+    if past_dinners == None:
+        dinners = Dinner.objects.filter()
+    else:
+        dinners = Dinner.objects.filter()[:past_dinners]
+    possible_neighbors = {}
+    past_person_to_dinners = PersonToDinner.objects.filter(dinner__in=dinners)
+    for diner in diners:
+        diner_person_to_dinners = past_person_to_dinners.filter(person=diner)
+        past_neighbors = []
+        for person_to_dinner in diner_person_to_dinners:
+            past_neighbors += person_to_dinner.get_neighbors()
+        past_neighbors = list(set(past_neighbors))
+        possible_neighbors[str(diner.pk)] = [diner for diner in diners if (diner not in past_neighbors)]
+    return possible_neighbors
+        
+
+def generate_seating_chart(diners, past_dinners=None):
+    possible_neighbors = create_possible_neighbor_dict(diners=diners, past_dinners=past_dinners)
+
+

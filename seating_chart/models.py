@@ -151,3 +151,5 @@ class PersonToDinner(models.Model):
     def __unicode__(self):
             return str(self.person.get_name()) + ": " + str(self.dinner)
 
+    def get_neighbors(self):
+        return [self.left_neighbor.person, self.right_neighbor.person]
