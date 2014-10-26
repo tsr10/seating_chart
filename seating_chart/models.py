@@ -49,79 +49,6 @@ class Dinner(models.Model):
     def pairs_list(self):
         return range(0, self.number_of_pairs())
 
-    def get_available_seats(self):
-        available_seats = []
-        if not PersonToDinner.objects.filter(dinner=self, is_head=True).exists():
-            available_seats.append('head')
-        if not PersonToDinner.objects.filter(dinner=self, is_foot=True).exists():
-            available_seats.append('foot')
-        for i in range(0, self.number_of_pairs()):
-            if not PersonToDinner.objects.filter(dinner=self, seat_number=str(i) + '__left').exists():
-                available_seats.append(str(i) + '__left')
-            if not PersonToDinner.objects.filter(dinner=self, seat_number=str(i) + '__right').exists():
-                available_seats.append(str(i) + '__right')
-        return available_seats
-
-    def get_arranged_dinner(self):
-        pairs_list = []
-        head = PersonToDinner.objects.get(dinner=self, is_head=True)
-        for i in range(0, self.number_of_pairs()):
-            try:
-                left = PersonToDinner.objects.get(dinner=self, seat_number=str(i) + '__left')
-            except:
-                left = None
-            try:
-                right = PersonToDinner.objects.get(dinner=self, seat_number=str(i) + '__right')
-            except:
-                right = None
-            pairs_list.append((left, right))
-        foot = PersonToDinner.objects.get(dinner=self, is_foot=True)
-        return head, pairs_list, foot
-
-    def display_arranged_dinner(self):
-        display = ""
-        head = PersonToDinner.objects.get(dinner=self, is_head=True).person.get_name()
-        display += head + "<br>"
-        for i in range(0, self.number_of_pairs()):
-            try:
-                left = PersonToDinner.objects.get(dinner=self, seat_number=str(i) + '__left').person.get_name()
-            except:
-                left = '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'
-            try:
-                right = PersonToDinner.objects.get(dinner=self, seat_number=str(i) + '__right').person.get_name()
-            except:
-                right = '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'
-            display += str(left) + '&nbsp;&nbsp;&nbsp;' + str(right) + "<br>"
-        foot = PersonToDinner.objects.get(dinner=self, is_foot=True).person.get_name()
-        display += foot + '<br>'
-        return display
-
-    def save_neighbors(self):
-        head, pairs_list, foot = self.get_arranged_dinner()
-        left_side_left_neighbor = head
-        right_side_right_neighbor = head
-        for left, right in pairs_list:
-            if left:
-                left_side_left_neighbor.right_neighbor = left
-                left.left_neighbor = left_side_left_neighbor
-                left.save()
-                left_side_left_neighbor.save()
-                left_side_left_neighbor = left
-            if right:
-                right_side_right_neighbor.left_neighbor = right
-                right.right_neighbor = right_side_right_neighbor
-                right.save()
-                right_side_right_neighbor.save()
-                right_side_right_neighbor = right
-        foot.left_neighbor = left_side_left_neighbor
-        left_side_left_neighbor.right_neighbor = foot
-        foot.right_neighbor = right_side_right_neighbor
-        right_side_right_neighbor.left_neighbor = foot
-        foot.save()
-        right_side_right_neighbor.save()
-        left_side_left_neighbor.save()
-        return self
-
     def reset_dinner(self):
         self.is_saved = False
         for person_to_dinner in PersonToDinner.objects.filter(dinner=self):
@@ -133,6 +60,22 @@ class Dinner(models.Model):
             person_to_dinner.save()
         self.save()
         return self
+
+    def render_chart(self):
+        """
+        Prepares the seating chart for showing on the page.
+        """
+        person_to_dinners = PersonToDinner.objects.filter(dinner=self).order_by('seat_number')
+        head = person_to_dinners[0]
+        foot = person_to_dinners[len(person_to_dinners)/2]
+        second_half = person_to_dinners[(len(person_to_dinners)/2 + 1):(len(person_to_dinners))]
+        second_half.reverse()
+        first_half = person_to_dinners[1:(len(person_to_dinners)/2)]
+        if len(first_half) < len(second_half):
+            first_half += [{"person" : "Empty seat"}]
+        sides = zip(second_half, first_half)
+        print sides
+        return {"head" : head, "sides" : sides, "foot" : foot}
 
 class PersonToDinner(models.Model):
     dinner = models.ForeignKey(Dinner)

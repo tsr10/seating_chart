@@ -1,4 +1,5 @@
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required
 from django.shortcuts import render_to_response, redirect
 from django.template import RequestContext
 
@@ -9,6 +10,7 @@ from seating_chart.utils import make_new_seating_chart
 def home(request):
 	return redirect('seating_chart.views.add_person')
 
+@login_required
 def arrange_seating_chart(request, pk):
 	"""
 	Generates the seating chart. You can only use these commands if you've assigned enough people to this
@@ -19,8 +21,6 @@ def arrange_seating_chart(request, pk):
 	dinner = Dinner.objects.get(pk=pk)
 
 	dinner = dinner.reset_dinner()
-
-	people_at_dinner = PersonToDinner.objects.filter(dinner=dinner)
 
 	Form = arrange_seating_chart_form_factory(dinner=dinner)
 
@@ -37,6 +37,7 @@ def arrange_seating_chart(request, pk):
 		'dinner' : dinner,},
 		context_instance=RequestContext(request))
 
+@login_required
 def generate_seating_chart(request, pk):
 	"""
 	Generates the seating chart and outputs it to a form.
@@ -46,19 +47,34 @@ def generate_seating_chart(request, pk):
 
 	dinner = Dinner.objects.get(pk=pk)
 
-	dinner = make_new_seating_chart(dinner=dinner)
+	chart = make_new_seating_chart(diners=[person_to_dinner.person for person_to_dinner in PersonToDinner.objects.filter(dinner=dinner)], past_dinners=list(Dinner.objects.filter(account=account, is_saved=True).order_by('-date')))
 
-	head, pairs_list, foot = dinner.get_arranged_dinner()
+	person_to_dinners = PersonToDinner.objects.select_related('person').filter(dinner=dinner)
+	person_to_dinner_list = [person_to_dinners.filter(person__id=int(x))[0] for x in chart]
+
+	for i, person_to_dinner in enumerate(person_to_dinner_list):
+		person_to_dinner_list[i].left_neighbor = person_to_dinner_list[i-1]
+		person_to_dinner_list[i].right_neighbor = person_to_dinner_list[(i+1)%(len(person_to_dinner_list))]
+		person_to_dinner_list[i].seat_number = str(i)
+		if i == 0:
+			person_to_dinner_list[i].is_head = True
+		person_to_dinner_list[i].save()
+
+	dinner.is_saved = True
+	dinner.save()
+
+	head, sides, foot = dinner.render_chart()
 
 	return render_to_response('generate_seating_chart.html',
-		{'head' : head,
-		'pairs_list' : pairs_list,
+		{'chart' : person_to_dinner_list,
+		'head' : head,
+		'sides' : sides,
 		'foot' : foot,
 		'account' : account,
 		'dinner' : dinner,},
 		context_instance=RequestContext(request))
 
-
+@login_required
 def add_person(request):
 	"""
 	Allows the host to add a new person to the database.
@@ -85,6 +101,7 @@ def add_person(request):
 		'form' : form},
 		context_instance=RequestContext(request))
 
+@login_required
 def add_dinner(request):
 	"""
 	Allows the host to add a new dinner.
@@ -110,6 +127,7 @@ def add_dinner(request):
 		'form' : form,},
 		context_instance=RequestContext(request))
 
+@login_required
 def add_person_to_dinner(request, pk):
 	"""
 	Allows the host to add a person to a dinner.

@@ -3,17 +3,6 @@
 
 {% block body %}
 
-<div>
-    {{ head.person }}
-</div>
-
-{% for left, right in pairs_list %}
-{{ left.person }} {{ right.person }}
-<br>
-{% endfor %}
-
-<div>
-    {{ foot.person }}
-</div>
+{% include "show_seating_chart.html" with rendering=dinner.render_chart %}
 
 {% endblock body %}

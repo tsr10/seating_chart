@@ -9,13 +9,14 @@
 
 Current dinners in DB:<br>
 {% for dinner in dinners %}
-	Dinner on: {{ dinner.date }}, attendees: {{ dinner.attendees }}<br>
+	<b>Dinner on: {{ dinner.date }}, attendees: {{ dinner.attendees }}</b><br>
 	{% if not dinner.is_saved %}
+		Dinner not yet arranged.<br>
 		{% for person_to_dinner in dinner.get_person_to_dinners %}
 			Attending: {{ person_to_dinner.person }}<br>
 		{% endfor %}
 	{% else %}
-		{{ dinner.display_arranged_dinner|safe }}
+		{% include "show_seating_chart.html" with rendering=dinner.render_chart %}
 	{% endif %}
 {% endfor %}
 

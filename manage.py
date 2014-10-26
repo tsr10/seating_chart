@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.7
+#!/Users/theodorerogers/.virtualenvs/seating_chart/bin/python
 import os
 import sys
 

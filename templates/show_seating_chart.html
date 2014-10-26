@@ -1,0 +1,19 @@
+<table>
+    <tr>
+        <td></td>
+        <td>{{ rendering.head.person }}</td>
+        <td></td>
+    </tr>
+    {% for left, right in rendering.sides %}
+    <tr>
+        <td>{{ left.person }}</td>
+        <td></td>
+        <td>{{ right.person }}</td>
+    </tr>
+    {% endfor %}
+    <tr>
+        <td></td>
+        <td>{{ rendering.foot.person }}</td>
+        <td></td>
+    </tr>
+</table>

@@ -26,7 +26,7 @@
                     </button>
                     <a class="navbar-brand" href="#">Seating Chart</a>
                 </div>
-
+                {% if user.is_authenticated %}
                 <div class="collapse navbar-collapse" id="navbar-collapse">
                     <ul class="nav navbar-nav">
                         <li class="active"><a href="{% url 'add_person' %}">Add Person</a></li>
@@ -58,6 +58,7 @@
                         </li>
                     </ul>
                 </div>
+                {% endif %}
             </div>
         </nav>
         {% endblock head %}
