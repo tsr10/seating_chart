@@ -29,13 +29,14 @@ def make_new_seating_chart(diners, manually_placed_diners, past_dinners=[]):
     forbidden_configurations = {}
     possible_neighbors = create_possible_neighbor_dict(diners=diners, past_dinners=past_dinners)
     possible_neighbors = update_possible_neighbors(current_chart=[str(diners[0].pk)], possible_neighbors=possible_neighbors)
-    return_value, chart, forbidden_configurations = add_one_more_diner(current_chart=[str(diners[0].pk)], possible_neighbors=possible_neighbors, forbidden_configurations={}, number_of_diners=len(diners))
+    return_value, chart, forbidden_configurations = add_one_more_diner(current_chart=[str(diners[0].pk)], possible_neighbors=possible_neighbors, forbidden_configurations={}, number_of_diners=len(diners), manually_placed_diners=manually_placed_diners)
+    print diners
     if return_value == False:
         del past_dinners[-1]
         chart = make_new_seating_chart(diners=diners, manually_placed_diners=manually_placed_diners, past_dinners=past_dinners)
     return chart
 
-def add_one_more_diner(current_chart, possible_neighbors, forbidden_configurations, number_of_diners):
+def add_one_more_diner(current_chart, possible_neighbors, forbidden_configurations, number_of_diners, manually_placed_diners):
     """
     We try adding one more diner to the table here. This is a recursive function, and when we hit the failure condition
     we want to record the configuration that failed in forbidden_configurations.
@@ -52,8 +53,16 @@ def add_one_more_diner(current_chart, possible_neighbors, forbidden_configuratio
     for diner, neighbors in possible_neighbors.iteritems():
         if current_chart[-1] in neighbors:
             next_choices.append(diner)
+    if manually_placed_diners.has_key(len(current_chart)):
+        print "line 59"
+        if manually_placed_diners[len(current_chart)] in next_choices:
+            print "line 61"
+            print next_choices
+            next_choices = [manually_placed_diners[len(current_chart)]]
+        else:
+            next_choices = []
     for next_choice in next_choices:
-        return_value, chart, forbidden_configurations = add_one_more_diner(current_chart=current_chart + [next_choice], possible_neighbors=update_possible_neighbors(current_chart=current_chart + [next_choice], possible_neighbors=possible_neighbors), forbidden_configurations=forbidden_configurations, number_of_diners=number_of_diners)
+        return_value, chart, forbidden_configurations = add_one_more_diner(current_chart=current_chart + [next_choice], possible_neighbors=update_possible_neighbors(current_chart=current_chart + [next_choice], possible_neighbors=possible_neighbors), forbidden_configurations=forbidden_configurations, number_of_diners=number_of_diners, manually_placed_diners=manually_placed_diners)
         if return_value == True:
             return True, chart, forbidden_configurations
     forbid_configuration(current_chart=current_chart, forbidden_configurations=forbidden_configurations)
@@ -78,21 +87,16 @@ def update_possible_neighbors(current_chart, possible_neighbors):
 
 def forbid_configuration(current_chart, forbidden_configurations):
     """
-    Add this configuration to the forbidden dict. Note that we sort all middle (not first or last) elements of the 
-    current configuration, as it doesn't really matter how the middle elements are ordered - it won't affect
-    the validity of future actions.
+    Add this configuration to the forbidden dict. This makes sure that we don't check the same configuration twice.
     """
     if len(current_chart) < 2:
         forbidden_configurations[",".join(map(lambda x: str(x), current_chart))] = True
     else:
-        sorted_chart = [current_chart[0]] + sorted(current_chart[1:(len(current_chart)-2)]) + [current_chart[-1]]
-        forbidden_configurations[",".join(map(lambda x: str(x), sorted_chart))] = True
+        forbidden_configurations[",".join(map(lambda x: str(x), current_chart))] = True
 
 def check_forbidden(current_chart, forbidden_configurations):
     """
-    Checks if a key is forbidden. If it is, we don't have to proceed any further. Note that we sort the middle 
-    entries, as they can occur in any order and it won't make a difference in terms of how future neighbors 
-    act.
+    Checks if a key is forbidden. If it is, we don't have to proceed any further.
     """
     if len(current_chart) < 2:
         if forbidden_configurations.has_key(",".join(map(lambda x: str(x), current_chart))):
@@ -100,8 +104,7 @@ def check_forbidden(current_chart, forbidden_configurations):
         else:
             return False
     else:
-        sorted_chart = [current_chart[0]] + sorted(current_chart[1:(len(current_chart)-2)]) + [current_chart[-1]]
-        if forbidden_configurations.has_key(",".join(map(lambda x: str(x), sorted_chart))):
+        if forbidden_configurations.has_key(",".join(map(lambda x: str(x), current_chart))):
             return True
         else:
             return False

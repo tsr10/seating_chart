@@ -1,7 +1,39 @@
 <form method="post">
     {% csrf_token %}
 
-    {{ form }}
+    {% include 'forms/generic-form-nonfield-errors.html' %}
+
+    {% for i in dinner.get_seating_order %}
+        {% if i == 0 %}
+            Head:
+            <select id="id_seat__{{ i }}" name="seat__{{ i }}">
+                {% for pk, text in form.seat__0.field.choices %}
+                <option value="{{ pk }}">{{ text }}</option>
+                {% endfor %}
+            </select>
+            <br>
+        {% elif i == dinner.get_foot_number %}
+            Foot:
+            <select id="id_seat__{{ i }}" name="seat__{{ i }}">
+                {% for pk, text in form.seat__0.field.choices %}
+                <option value="{{ pk }}">{{ text }}</option>
+                {% endfor %}
+            </select>
+            <br>
+        {% elif i == "None" %}
+            NONE<br>
+        {% else %}
+            Seat {{ i }}:
+            <select id="id_seat__{{ i }}" name="seat__{{ i }}">
+                {% for pk, text in form.seat__0.field.choices %}
+                <option value="{{ pk }}">{{ text }}</option>
+                {% endfor %}
+            </select>
+            {% if i < dinner.get_foot_number %}
+                <br>
+            {% endif %}
+        {% endif %}
+    {% endfor %}
 
     <div class="clearfix"></div>
 

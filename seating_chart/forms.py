@@ -3,6 +3,8 @@ from django.forms import extras
 
 from models import Person, Dinner, PersonToDinner
 
+from crispy_forms.helper import FormHelper
+
 import datetime
 
 #Controls the page where we add new people to an account
@@ -103,6 +105,7 @@ def arrange_seating_chart_form_factory(dinner):
 
     class Form(_ArrangeSeatingChartForm):
         def __init__(self, *args, **kwargs):
+            self.helper = FormHelper()
             super(Form, self).__init__(*args, **kwargs)
             for i in range(0, dinner.attendees()):
                 self.fields['seat__' + str(i)] = forms.ModelChoiceField(PersonToDinner.objects.filter(dinner=dinner), required=False)

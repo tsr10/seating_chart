@@ -133,6 +133,7 @@ INSTALLED_APPS = (
     'compressor',
     'seating_chart',
     'crispy_forms',
+    'toolz',
 )
 
 # A sample logging configuration. The only tangible logging

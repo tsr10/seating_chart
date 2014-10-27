@@ -1,6 +1,8 @@
 from django.db import models
 from django.contrib.auth.models import User
 
+from toolz import interleave
+
 class Account(models.Model):
     """
     An account variable for assigning flags to logged in users. One per user.
@@ -43,11 +45,22 @@ class Dinner(models.Model):
     def get_seat_numbers(self):
         return range(0, self.attendees())
 
+    def get_seating_order(self):
+        attendees = self.attendees()
+        if attendees % 2 == 1:
+            pad = ["None"]
+        else:
+            pad = []
+        return [0] + [i for sub in zip(range(self.attendees()/2+1, self.attendees()), range(1, self.attendees()/2) + pad) for i in sub] + [self.attendees()/2]
+
     def get_person_to_dinners(self):
         return PersonToDinner.objects.filter(dinner=self).order_by('person__last_name')
 
     def attendees(self):
         return self.get_person_to_dinners().count()
+
+    def get_foot_number(self):
+        return self.attendees()/2
 
     def number_of_pairs(self):
         attendees = self.attendees()
