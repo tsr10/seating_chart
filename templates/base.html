@@ -28,7 +28,7 @@
                 </div>
                 {% if user.is_authenticated %}
                 <div class="collapse navbar-collapse" id="navbar-collapse">
-                    <ul class="nav navbar-nav">
+                    <ul class="nav navbar-nav" id="navbar-main">
                         <li class="active"><a href="{% url 'add_person' %}">Add Person</a></li>
                         <li class="active"><a href="{% url 'add_dinner' %}">Add Dinner</a></li>
                         <li class="active"></li>

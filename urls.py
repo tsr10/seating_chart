@@ -13,8 +13,8 @@ urlpatterns = patterns('',
     url(r'^admin/', include(admin.site.urls)),
 
     #The login view
-    url(r'^login/$', 'django.contrib.auth.views.login', {'template_name': 'login.html'}),
+    url(r'^login/$', 'django.contrib.auth.views.login', {'template_name': 'login.html'}, name='login'),
 
     #The logout view
-    url(r'^logout/$', 'django.contrib.auth.views.logout'),
+    url(r'^logout/$', 'django.contrib.auth.views.logout', {'template_name': 'logout.html'}, name='logout'),
 )

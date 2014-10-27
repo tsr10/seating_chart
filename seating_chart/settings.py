@@ -12,6 +12,8 @@ ADMINS = (
 
 LOGIN_URL = '/login/'
 
+LOGIN_REDIRECT_URL = '/seating_chart/add_person/'
+
 LOGOUT_URL = '/logout/'
 
 MANAGERS = ADMINS

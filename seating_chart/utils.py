@@ -1,4 +1,4 @@
-from seating_chart.models import Person, PersonToDinner, Dinner
+from seating_chart.models import Person, PersonToDinner
 
 import copy
 
@@ -26,47 +26,37 @@ def make_new_seating_chart(diners, manually_placed_diners, past_dinners=[]):
     objects fetched by the past_dinners value. If a valid dinner isn't possible given these constraints, we drop
     the oldest dinner in the list and try again.
     """
-    forbidden_configurations = {}
     possible_neighbors = create_possible_neighbor_dict(diners=diners, past_dinners=past_dinners)
     possible_neighbors = update_possible_neighbors(current_chart=[str(diners[0].pk)], possible_neighbors=possible_neighbors)
-    return_value, chart, forbidden_configurations = add_one_more_diner(current_chart=[str(diners[0].pk)], possible_neighbors=possible_neighbors, forbidden_configurations={}, number_of_diners=len(diners), manually_placed_diners=manually_placed_diners)
-    print diners
+    return_value, chart = add_one_more_diner(current_chart=[str(diners[0].pk)], possible_neighbors=possible_neighbors, number_of_diners=len(diners), manually_placed_diners=manually_placed_diners)
     if return_value == False:
         del past_dinners[-1]
         chart = make_new_seating_chart(diners=diners, manually_placed_diners=manually_placed_diners, past_dinners=past_dinners)
     return chart
 
-def add_one_more_diner(current_chart, possible_neighbors, forbidden_configurations, number_of_diners, manually_placed_diners):
+def add_one_more_diner(current_chart, possible_neighbors, number_of_diners, manually_placed_diners):
     """
-    We try adding one more diner to the table here. This is a recursive function, and when we hit the failure condition
-    we want to record the configuration that failed in forbidden_configurations.
+    We try adding one more diner to the table here. This is a recursive function.
     """
     if len(current_chart) == number_of_diners:
-        return True, current_chart, forbidden_configurations
-    if check_forbidden(current_chart=current_chart, forbidden_configurations=forbidden_configurations):
-        return False, current_chart, forbidden_configurations
+        return True, current_chart
     for diner, neighbors in possible_neighbors.iteritems():
         if len(neighbors) < 2:
-            forbid_configuration(current_chart=current_chart, forbidden_configurations=forbidden_configurations)
-            return False, current_chart, forbidden_configurations
+            return False, current_chart
     next_choices = []
     for diner, neighbors in possible_neighbors.iteritems():
         if current_chart[-1] in neighbors:
             next_choices.append(diner)
     if manually_placed_diners.has_key(len(current_chart)):
-        print "line 59"
         if manually_placed_diners[len(current_chart)] in next_choices:
-            print "line 61"
-            print next_choices
             next_choices = [manually_placed_diners[len(current_chart)]]
         else:
             next_choices = []
     for next_choice in next_choices:
-        return_value, chart, forbidden_configurations = add_one_more_diner(current_chart=current_chart + [next_choice], possible_neighbors=update_possible_neighbors(current_chart=current_chart + [next_choice], possible_neighbors=possible_neighbors), forbidden_configurations=forbidden_configurations, number_of_diners=number_of_diners, manually_placed_diners=manually_placed_diners)
+        return_value, chart = add_one_more_diner(current_chart=current_chart + [next_choice], possible_neighbors=update_possible_neighbors(current_chart=current_chart + [next_choice], possible_neighbors=possible_neighbors), number_of_diners=number_of_diners, manually_placed_diners=manually_placed_diners)
         if return_value == True:
-            return True, chart, forbidden_configurations
-    forbid_configuration(current_chart=current_chart, forbidden_configurations=forbidden_configurations)
-    return False, current_chart, forbidden_configurations
+            return True, chart
+    return False, current_chart
 
 def update_possible_neighbors(current_chart, possible_neighbors):
     """
@@ -85,27 +75,16 @@ def update_possible_neighbors(current_chart, possible_neighbors):
                 new_possible_neighbors[diner] = neighbors
         return new_possible_neighbors
 
-def forbid_configuration(current_chart, forbidden_configurations):
+def configure_person_to_dinner_flags(person_to_dinner_list, dinner):
     """
-    Add this configuration to the forbidden dict. This makes sure that we don't check the same configuration twice.
+    Loads each diner's neighbors and sets the is_head and is_foot flags.
     """
-    if len(current_chart) < 2:
-        forbidden_configurations[",".join(map(lambda x: str(x), current_chart))] = True
-    else:
-        forbidden_configurations[",".join(map(lambda x: str(x), current_chart))] = True
-
-def check_forbidden(current_chart, forbidden_configurations):
-    """
-    Checks if a key is forbidden. If it is, we don't have to proceed any further.
-    """
-    if len(current_chart) < 2:
-        if forbidden_configurations.has_key(",".join(map(lambda x: str(x), current_chart))):
-            return True
-        else:
-            return False
-    else:
-        if forbidden_configurations.has_key(",".join(map(lambda x: str(x), current_chart))):
-            return True
-        else:
-            return False
-
+    for i, person_to_dinner in enumerate(person_to_dinner_list):
+        person_to_dinner_list[i].left_neighbor = person_to_dinner_list[i-1]
+        person_to_dinner_list[i].right_neighbor = person_to_dinner_list[(i+1)%(len(person_to_dinner_list))]
+        person_to_dinner_list[i].seat_number = str(i)
+        if i == 0:
+            person_to_dinner_list[i].is_head = True
+        if dinner.attendees()/2 == i:
+            person_to_dinner_list[i].is_foot = True
+    return person_to_dinner_list

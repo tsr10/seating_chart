@@ -5,7 +5,7 @@ from django.template import RequestContext
 
 from seating_chart.forms import add_person_form_factory, add_dinner_form_factory, add_person_to_dinner_form_factory, arrange_seating_chart_form_factory
 from seating_chart.models import Person, Dinner, PersonToDinner, Account
-from seating_chart.utils import make_new_seating_chart
+from seating_chart.utils import make_new_seating_chart, configure_person_to_dinner_flags
 
 def home(request):
 	return redirect('seating_chart.views.add_person')
@@ -53,22 +53,14 @@ def generate_seating_chart(request, pk):
 		manually_placed_diners[manually_placed_diner[1]] = manually_placed_diner[0]
 
 	diners = [person_to_dinner.person for person_to_dinner in PersonToDinner.objects.filter(dinner=dinner).order_by('-is_head', 'manually_placed_diner')]
-	print diners
 
 	chart = make_new_seating_chart(diners=diners, manually_placed_diners=manually_placed_diners, past_dinners=list(Dinner.objects.filter(account=account, is_saved=True).order_by('-date')))
 
 	person_to_dinners = PersonToDinner.objects.select_related('person').filter(dinner=dinner)
 	person_to_dinner_list = [person_to_dinners.filter(person__id=int(x))[0] for x in chart]
 
-	for i, person_to_dinner in enumerate(person_to_dinner_list):
-		person_to_dinner_list[i].left_neighbor = person_to_dinner_list[i-1]
-		person_to_dinner_list[i].right_neighbor = person_to_dinner_list[(i+1)%(len(person_to_dinner_list))]
-		person_to_dinner_list[i].seat_number = str(i)
-		if i == 0:
-			person_to_dinner_list[i].is_head = True
-		if dinner.attendees()/2 == i:
-			person_to_dinner_list[i].is_foot = True
-		person_to_dinner_list[i].save()
+	person_to_dinner_list = configure_person_to_dinner_flags(person_to_dinner_list=person_to_dinner_list, dinner=dinner)
+	[person_to_dinner.save() for person_to_dinner in person_to_dinner_list]
 
 	dinner.is_saved = True
 	dinner.save()

@@ -1,7 +1,7 @@
 from django import forms
 from django.forms import extras
 
-from models import Person, Dinner, PersonToDinner
+from models import Person, PersonToDinner
 
 from crispy_forms.helper import FormHelper
 
@@ -107,7 +107,7 @@ def arrange_seating_chart_form_factory(dinner):
         def __init__(self, *args, **kwargs):
             self.helper = FormHelper()
             super(Form, self).__init__(*args, **kwargs)
-            for i in range(0, dinner.attendees()):
+            for i in dinner.get_seating_order():
                 self.fields['seat__' + str(i)] = forms.ModelChoiceField(PersonToDinner.objects.filter(dinner=dinner), required=False)
 
         _dinner = dinner
