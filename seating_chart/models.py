@@ -1,8 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
 
-from toolz import interleave
-
 class Account(models.Model):
     """
     An account variable for assigning flags to logged in users. One per user.
