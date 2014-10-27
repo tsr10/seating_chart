@@ -2,12 +2,18 @@ from django.db import models
 from django.contrib.auth.models import User
 
 class Account(models.Model):
+    """
+    An account variable for assigning flags to logged in users. One per user.
+    """
     user = models.ForeignKey(User)
 
     def upcoming_dinners(self):
         return Dinner.objects.filter(account=self, is_saved=False).order_by('date')
 
 class Person(models.Model):
+    """
+    Holds the information for a specific person. You can't have two people with the same name in the same account.
+    """
     account = models.ForeignKey(Account)
 
     first_name = models.CharField(max_length=100)
@@ -19,7 +25,13 @@ class Person(models.Model):
     def get_name(self):
         return str(self.first_name) + " " + str(self.last_name)
 
+    class Meta:
+        unique_together = ("account", "first_name", "last_name")
+
 class Dinner(models.Model):
+    """
+    The dinner variable. All information about the dinner is foreign keyed to this model. One per dinner.
+    """
     account = models.ForeignKey(Account)
 
     date = models.DateField(null=True, blank=True)
@@ -77,6 +89,9 @@ class Dinner(models.Model):
         return {"head" : head, "sides" : sides, "foot" : foot}
 
 class PersonToDinner(models.Model):
+    """
+    The model that links people to dinners.
+    """
     dinner = models.ForeignKey(Dinner)
     person = models.ForeignKey(Person)
 

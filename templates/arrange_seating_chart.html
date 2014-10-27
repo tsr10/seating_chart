@@ -8,58 +8,8 @@ You need at least 4 people to attend a dinner.<br>
 Current attendees: {{ dinner.attendees }}
 {% include "current_attendees.html" with attendees=dinner.get_person_to_dinners %}
 {% else %}
-<form method="post">
-	{% csrf_token %}
 
-	{% include 'forms/generic-form-nonfield-errors.html' %}
-
-    <div class="form-group {% if form.head.errors %}field-error has-error{% endif %} form-field-{{ form.head.html_name }}-container">
-        <label for="id_{{ form.head.html_name }}" class="control-label">{{ form.head.label }}:
-            {% if form.head.help_text %}
-                <br/><span class="help-block">{{ form.head.help_text }}</span>
-            {% endif %}
-
-            {% for error in form.head.errors %}
-                <br/><span class="help-block help-block-error">{{error}}</span>
-            {% endfor %}
-        </label>
-
-        {{ form.head|add_class:"form-control"|add_error_class:"" }}
-    </div>
-
-    {% for i in dinner.pairs_list %}
-	<select id="id_seat__{{ i }}__left" name="seat__{{ i }}__left">
-		{% for pk, text in form.head.field.choices %}
-		<option value="{{ pk }}">{{ text }}</option>
-		{% endfor %}
-	</select>
-	<select id="id_seat__{{ i }}__right" name="seat__{{ i }}__right">
-		{% for pk, text in form.head.field.choices %}
-		<option value="{{ pk }}">{{ text }}</option>
-		{% endfor %}
-	</select>
-    <br>
-    {% endfor %}
-
-    <div class="form-group {% if form.foot.errors %}field-error has-error{% endif %} form-field-{{ form.foot.html_name }}-container">
-        <label for="id_{{ form.foot.html_name }}" class="control-label">{{ form.foot.label }}:
-            {% if form.foot.help_text %}
-                <br/><span class="help-block">{{ form.foot.help_text }}</span>
-            {% endif %}
-
-            {% for error in form.foot.errors %}
-                <br/><span class="help-block help-block-error">{{error}}</span>
-            {% endfor %}
-        </label>
-
-        {{ form.foot|add_class:"form-control"|add_error_class:"" }}
-    </div>
-
-    <div class="clearfix"></div>
-
-	<input type='submit' value='Generate' name='generate' /><br>
-
-</form>
+{% include "arrange_chart.html" %}
 
 {% endif %}
 {% endblock body %}

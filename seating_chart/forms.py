@@ -75,36 +75,18 @@ class _ArrangeSeatingChartForm(forms.Form):
 
         seat_list = []
 
-        head = self.cleaned_data.get('head', None)
-        foot = self.cleaned_data.get('foot', None)
         dinner = self._dinner
 
-        if head:
-            person_to_dinner = head
-            person_to_dinner.seat_number = 'head'
-            person_to_dinner.is_head = True
-            person_to_dinner.manually_placed_diner = True
-            seat_list.append(person_to_dinner)
+        for i in range(0, dinner.attendees()):
+            seat = self.cleaned_data.get('seat__' + str(i), None)
 
-        if foot:
-            person_to_dinner = foot
-            person_to_dinner.seat_number = 'foot'
-            person_to_dinner.is_foot = True
-            person_to_dinner.manually_placed_diner = True
-            seat_list.append(person_to_dinner)
-
-        for i in range(0, dinner.number_of_pairs()):
-            left_seat = self.cleaned_data.get('seat__' + str(i) + '__left', None)
-            right_seat = self.cleaned_data.get('seat__' + str(i) + '__right', None)
-
-            if left_seat:
-                person_to_dinner = left_seat
-                person_to_dinner.seat_number = str(i) + '__left'
-                seat_list.append(person_to_dinner)
-
-            if right_seat:
-                person_to_dinner = right_seat
-                person_to_dinner.seat_number = str(i) + '__right'
+            if seat:
+                person_to_dinner = seat
+                person_to_dinner.seat_number = i
+                if i == 0:
+                    person_to_dinner.is_head = True
+                elif (i == dinner.attendees() - 1):
+                    person_to_dinner.is_foot = True
                 seat_list.append(person_to_dinner)
 
         if len(seat_list) != len(set(seat_list)):
@@ -122,12 +104,10 @@ def arrange_seating_chart_form_factory(dinner):
     class Form(_ArrangeSeatingChartForm):
         def __init__(self, *args, **kwargs):
             super(Form, self).__init__(*args, **kwargs)
-            for i in range(0, dinner.attendees):
+            for i in range(0, dinner.attendees()):
                 self.fields['seat__' + str(i)] = forms.ModelChoiceField(PersonToDinner.objects.filter(dinner=dinner), required=False)
 
         _dinner = dinner
-        head = forms.ModelChoiceField(PersonToDinner.objects.filter(dinner=dinner), required=False)
-        foot = forms.ModelChoiceField(PersonToDinner.objects.filter(dinner=dinner), required=False)
 
     return Form
 
