@@ -122,9 +122,8 @@ def arrange_seating_chart_form_factory(dinner):
     class Form(_ArrangeSeatingChartForm):
         def __init__(self, *args, **kwargs):
             super(Form, self).__init__(*args, **kwargs)
-            for i in range(0, dinner.number_of_pairs()):
-                self.fields['seat__' + str(i) + '__left'] = forms.ModelChoiceField(PersonToDinner.objects.filter(dinner=dinner), required=False)
-                self.fields['seat__' + str(i) + '__right'] = forms.ModelChoiceField(PersonToDinner.objects.filter(dinner=dinner), required=False)
+            for i in range(0, dinner.attendees):
+                self.fields['seat__' + str(i)] = forms.ModelChoiceField(PersonToDinner.objects.filter(dinner=dinner), required=False)
 
         _dinner = dinner
         head = forms.ModelChoiceField(PersonToDinner.objects.filter(dinner=dinner), required=False)

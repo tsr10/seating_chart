@@ -1,5 +1,7 @@
 from seating_chart.models import Person, PersonToDinner, Dinner
 
+import copy
+
 def create_possible_neighbor_dict(diners, past_dinners):
     """
     This function creates the dictionary that lists the possible neighbors for each diner. Possible neighbors are 
@@ -17,7 +19,7 @@ def create_possible_neighbor_dict(diners, past_dinners):
         possible_neighbors[str(diner.pk)] = [str(potential_neighbor.pk) for potential_neighbor in diners if (potential_neighbor not in cannot_sit_next_to_list)]
     return possible_neighbors
         
-def make_new_seating_chart(diners, past_dinners=[]):
+def make_new_seating_chart(diners, manually_placed_diners, past_dinners=[]):
     """
     This is the function we call when we want to generate a seating chart for a dinner. It doesn't do any saving.
     It first creates a dictionary that contains the possible diners for each neighbor based on the old PersonToDinner
@@ -28,10 +30,9 @@ def make_new_seating_chart(diners, past_dinners=[]):
     possible_neighbors = create_possible_neighbor_dict(diners=diners, past_dinners=past_dinners)
     possible_neighbors = update_possible_neighbors(current_chart=[str(diners[0].pk)], possible_neighbors=possible_neighbors)
     return_value, chart, forbidden_configurations = add_one_more_diner(current_chart=[str(diners[0].pk)], possible_neighbors=possible_neighbors, forbidden_configurations={}, number_of_diners=len(diners))
-    print forbidden_configurations
     if return_value == False:
         del past_dinners[-1]
-        chart = make_new_seating_chart(diners=diners, past_dinners=past_dinners)
+        chart = make_new_seating_chart(diners=diners, manually_placed_diners=manually_placed_diners, past_dinners=past_dinners)
     return chart
 
 def add_one_more_diner(current_chart, possible_neighbors, forbidden_configurations, number_of_diners):
@@ -64,7 +65,7 @@ def update_possible_neighbors(current_chart, possible_neighbors):
     Note that we need to make a copy of the dictionary, as the possible_neighbors dictionary is different
     for each branch of recursive calls.
     """
-    new_possible_neighbors = possible_neighbors.copy()
+    new_possible_neighbors = copy.deepcopy(possible_neighbors)
     del new_possible_neighbors[current_chart[-1]]
     if len(current_chart) < 3:
         return new_possible_neighbors

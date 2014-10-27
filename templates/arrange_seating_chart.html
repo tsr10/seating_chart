@@ -3,6 +3,11 @@
 
 {% block body %}
 
+{% if dinner.attendees < 4 %}
+You need at least 4 people to attend a dinner.<br>
+Current attendees: {{ dinner.attendees }}
+{% include "current_attendees.html" with attendees=dinner.get_person_to_dinners %}
+{% else %}
 <form method="post">
 	{% csrf_token %}
 
@@ -55,4 +60,6 @@
 	<input type='submit' value='Generate' name='generate' /><br>
 
 </form>
+
+{% endif %}
 {% endblock body %}

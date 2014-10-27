@@ -54,7 +54,7 @@ class Dinner(models.Model):
         for person_to_dinner in PersonToDinner.objects.filter(dinner=self):
             person_to_dinner.left_neighbor = None
             person_to_dinner.right_neighbor = None
-            person_to_dinner.seat_number = ''
+            person_to_dinner.seat_number = None
             person_to_dinner.is_head = False
             person_to_dinner.is_foot = False
             person_to_dinner.save()
@@ -74,7 +74,6 @@ class Dinner(models.Model):
         if len(first_half) < len(second_half):
             first_half += [{"person" : "Empty seat"}]
         sides = zip(second_half, first_half)
-        print sides
         return {"head" : head, "sides" : sides, "foot" : foot}
 
 class PersonToDinner(models.Model):
@@ -84,7 +83,7 @@ class PersonToDinner(models.Model):
     left_neighbor = models.ForeignKey('self', null=True, related_name='left_neighbor_at_dinner')
     right_neighbor = models.ForeignKey('self', null=True, related_name='right_neighbor_at_dinner')
 
-    seat_number = models.CharField(max_length=100, default='')
+    seat_number = models.IntegerField(null=True, blank=True)
 
     is_head = models.BooleanField(default=False)
     is_foot = models.BooleanField(default=False)
