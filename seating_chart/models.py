@@ -64,6 +64,7 @@ class Dinner(models.Model):
     def reset_dinner(self):
         self.is_saved = False
         for person_to_dinner in PersonToDinner.objects.filter(dinner=self):
+            person_to_dinner.manually_placed_diner = False
             person_to_dinner.left_neighbor = None
             person_to_dinner.right_neighbor = None
             person_to_dinner.seat_number = None

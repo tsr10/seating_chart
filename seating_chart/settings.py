@@ -132,6 +132,7 @@ INSTALLED_APPS = (
     'bootstrap3',
     'compressor',
     'seating_chart',
+    'crispy_forms',
 )
 
 # A sample logging configuration. The only tangible logging

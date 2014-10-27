@@ -49,7 +49,7 @@ def generate_seating_chart(request, pk):
 
 	manually_placed_diners = [person_to_dinner.person for person_to_dinner in PersonToDinner.objects.select_related('person').filter(manually_placed_diner=True, dinner=dinner)]
 
-	chart = make_new_seating_chart(diners=[person_to_dinner.person for person_to_dinner in PersonToDinner.objects.filter(dinner=dinner)], manually_placed_diners=manually_placed_diners, past_dinners=list(Dinner.objects.filter(account=account, is_saved=True).order_by('-date')))
+	chart = make_new_seating_chart(diners=[person_to_dinner.person for person_to_dinner in PersonToDinner.objects.filter(dinner=dinner).order_by('-is_head')], manually_placed_diners=manually_placed_diners, past_dinners=list(Dinner.objects.filter(account=account, is_saved=True).order_by('-date')))
 
 	person_to_dinners = PersonToDinner.objects.select_related('person').filter(dinner=dinner)
 	person_to_dinner_list = [person_to_dinners.filter(person__id=int(x))[0] for x in chart]
