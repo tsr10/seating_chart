@@ -51,7 +51,10 @@ class Dinner(models.Model):
             pad = ["None"]
         else:
             pad = []
-        return [0] + [i for sub in zip(range(self.attendees()/2+1, self.attendees()), range(1, self.attendees()/2) + pad) for i in sub] + [self.attendees()/2]
+        first_half = range(1, self.attendees()/2) + pad
+        second_half = range(self.attendees()/2+1, self.attendees())
+        second_half.reverse()
+        return [0] + [i for sub in zip(second_half, first_half) for i in sub] + [self.attendees()/2]
 
     def get_person_to_dinners(self):
         return PersonToDinner.objects.filter(dinner=self).order_by('person__last_name')
