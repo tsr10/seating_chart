@@ -1,11 +1,11 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import render_to_response, redirect
+from django.shortcuts import render_to_response, redirect, get_object_or_404
 from django.template import RequestContext
 
 from seating_chart.forms import add_person_form_factory, add_dinner_form_factory, add_person_to_dinner_form_factory, arrange_seating_chart_form_factory
 from seating_chart.models import Person, Dinner, PersonToDinner, Account
-from seating_chart.utils import make_new_seating_chart, configure_person_to_dinner_flags
+from tasks import call_make_seating_chart_process
 
 def home(request):
 	return redirect('seating_chart.views.add_person')
@@ -56,16 +56,14 @@ def generate_seating_chart(request, pk):
 	diners = [person_to_dinner.person for person_to_dinner in PersonToDinner.objects.filter(dinner=dinner).order_by('-is_head', 'manually_placed_diner')]
 	randomly_placed_diners = [str(person_to_dinner.person.pk) for person_to_dinner in PersonToDinner.objects.select_related('person').filter(manually_placed_diner=False, dinner=dinner)]
 
-	chart = make_new_seating_chart(diners=diners, manually_placed_diners=manually_placed_diners, randomly_placed_diners=randomly_placed_diners, past_dinners=list(Dinner.objects.filter(account=account, is_saved=True).order_by('-date')))
+	if not dinner.is_processing and not dinner.is_saved:
+		call_make_seating_chart_process.delay(dinner=dinner, diners=diners, manually_placed_diners=manually_placed_diners, randomly_placed_diners=randomly_placed_diners, past_dinners=list(Dinner.objects.filter(account=account, is_saved=True).order_by('-date')))
+		dinner.is_processing = True
+		dinner.save()
+		person_to_dinner_list = []
 
-	person_to_dinners = PersonToDinner.objects.select_related('person').filter(dinner=dinner)
-	person_to_dinner_list = [person_to_dinners.filter(person__id=int(x))[0] for x in chart]
-
-	person_to_dinner_list = configure_person_to_dinner_flags(person_to_dinner_list=person_to_dinner_list, dinner=dinner)
-	[person_to_dinner.save() for person_to_dinner in person_to_dinner_list]
-
-	dinner.is_saved = True
-	dinner.save()
+	else:
+		person_to_dinner_list = []
 
 	head, sides, foot = dinner.render_chart()
 
@@ -83,7 +81,7 @@ def add_person(request):
 	"""
 	Allows the host to add a new person to the database.
 	"""
-	account = Account.objects.filter()[0]
+	account = Account.objects.get(user=request.user)
 
 	Form = add_person_form_factory(account=account)
 
@@ -160,3 +158,23 @@ def add_person_to_dinner(request, pk):
 		'form' : form,
 		'people_at_dinner' : people_at_dinner,},
 		context_instance=RequestContext(request))
+
+@login_required
+def delete_dinner(request, pk):
+	"""
+	Allows the host to add a person to a dinner.
+	"""
+	dinner = get_object_or_404(Dinner, pk=pk)
+
+	dinner.delete()
+	messages.add_message(request, messages.SUCCESS, "Dinner was deleted.")
+
+	return redirect('seating_chart.views.add_dinner')
+
+@login_required
+def about(request):
+	"""
+	Shows the about page.
+	"""
+	return render_to_response('about.html', {}, context_instance=RequestContext(request))
+

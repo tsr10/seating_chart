@@ -36,6 +36,7 @@ class Dinner(models.Model):
 
     date = models.DateField(null=True, blank=True)
     is_saved = models.BooleanField(default=False)
+    is_processing = models.BooleanField(default=False)
 
     def __unicode__(self):
             return str(self.date) + ": " + str(self.attendees()) + " attendees"

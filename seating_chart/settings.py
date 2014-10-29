@@ -16,6 +16,10 @@ LOGIN_REDIRECT_URL = '/seating_chart/add_person/'
 
 LOGOUT_URL = '/logout/'
 
+#redis broker and backend urls
+BROKER_URL = 'redis://localhost:6379/0'
+BACKEND_URL = 'redis://localhost:6379/0'
+
 MANAGERS = ADMINS
 
 DATABASES = {

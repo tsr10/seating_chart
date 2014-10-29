@@ -3,6 +3,10 @@
 
 {% block body %}
 
+{% if dinner.is_saved %}
 {% include "show_seating_chart.html" with rendering=dinner.render_chart %}
+{% elif dinner.is_processing %}
+Processing!
+{% endif %}
 
 {% endblock body %}
