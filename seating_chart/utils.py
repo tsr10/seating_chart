@@ -1,4 +1,6 @@
-from seating_chart.models import Person, PersonToDinner
+from seating_chart.models import PersonToDinner
+
+from random import shuffle
 
 import copy
 
@@ -19,7 +21,7 @@ def create_possible_neighbor_dict(diners, past_dinners):
         possible_neighbors[str(diner.pk)] = [str(potential_neighbor.pk) for potential_neighbor in diners if (potential_neighbor not in cannot_sit_next_to_list)]
     return possible_neighbors
         
-def make_new_seating_chart(diners, manually_placed_diners, past_dinners=[]):
+def make_new_seating_chart(diners, manually_placed_diners, randomly_placed_diners, past_dinners=[]):
     """
     This is the function we call when we want to generate a seating chart for a dinner. It doesn't do any saving.
     It first creates a dictionary that contains the possible diners for each neighbor based on the old PersonToDinner
@@ -27,33 +29,44 @@ def make_new_seating_chart(diners, manually_placed_diners, past_dinners=[]):
     the oldest dinner in the list and try again.
     """
     possible_neighbors = create_possible_neighbor_dict(diners=diners, past_dinners=past_dinners)
-    possible_neighbors = update_possible_neighbors(current_chart=[str(diners[0].pk)], possible_neighbors=possible_neighbors)
-    return_value, chart = add_one_more_diner(current_chart=[str(diners[0].pk)], possible_neighbors=possible_neighbors, number_of_diners=len(diners), manually_placed_diners=manually_placed_diners)
+    i = 0
+    while i < 10000:
+        diner_list = randomly_arrange_diners(diners=diners, manually_placed_diners=manually_placed_diners, randomly_placed_diners=list(randomly_placed_diners))
+        return_value, chart = add_one_more_diner(current_chart=[], possible_neighbors=possible_neighbors, diner_list=diner_list, manually_placed_diners=manually_placed_diners)
+        if return_value == True:
+            break
+        i += 1
     if return_value == False:
         del past_dinners[-1]
-        chart = make_new_seating_chart(diners=diners, manually_placed_diners=manually_placed_diners, past_dinners=past_dinners)
+        chart = make_new_seating_chart(diners=diners, manually_placed_diners=manually_placed_diners, randomly_placed_diners=randomly_placed_diners, past_dinners=past_dinners)
     return chart
 
-def add_one_more_diner(current_chart, possible_neighbors, number_of_diners, manually_placed_diners):
+def add_one_more_diner(current_chart, possible_neighbors, diner_list, manually_placed_diners):
     """
     We try adding one more diner to the table here. This is a recursive function.
     """
-    if len(current_chart) == number_of_diners:
+    if len(current_chart) == len(diner_list):
         return True, current_chart
     for diner, neighbors in possible_neighbors.iteritems():
-        if len(neighbors) < 2:
-            return False, current_chart
+        if not manually_placed_diners.has_key(diner):
+            if len(neighbors) < 2:
+                return False, current_chart
     next_choices = []
     for diner, neighbors in possible_neighbors.iteritems():
-        if current_chart[-1] in neighbors:
+        if (len(current_chart) == 0) or current_chart[-1] in neighbors:
             next_choices.append(diner)
     if manually_placed_diners.has_key(len(current_chart)):
-        if manually_placed_diners[len(current_chart)] in next_choices:
+        if (manually_placed_diners[len(current_chart)] in next_choices) or (manually_placed_diners.has_key(len(current_chart)-1)):
             next_choices = [manually_placed_diners[len(current_chart)]]
         else:
             next_choices = []
+    else:
+        if diner_list[len(current_chart)] in next_choices:
+            next_choices = [diner_list[len(current_chart)]]
+        else:
+            next_choices = []
     for next_choice in next_choices:
-        return_value, chart = add_one_more_diner(current_chart=current_chart + [next_choice], possible_neighbors=update_possible_neighbors(current_chart=current_chart + [next_choice], possible_neighbors=possible_neighbors), number_of_diners=number_of_diners, manually_placed_diners=manually_placed_diners)
+        return_value, chart = add_one_more_diner(current_chart=current_chart + [next_choice], possible_neighbors=update_possible_neighbors(current_chart=current_chart + [next_choice], possible_neighbors=possible_neighbors), manually_placed_diners=manually_placed_diners, diner_list=diner_list)
         if return_value == True:
             return True, chart
     return False, current_chart
@@ -88,3 +101,15 @@ def configure_person_to_dinner_flags(person_to_dinner_list, dinner):
         if dinner.attendees()/2 == i:
             person_to_dinner_list[i].is_foot = True
     return person_to_dinner_list
+
+def randomly_arrange_diners(randomly_placed_diners, manually_placed_diners, diners):
+    new_diner_list = []
+    shuffle(randomly_placed_diners)
+    for i in range(0, len(diners)):
+        if manually_placed_diners.has_key(i):
+            new_diner_list.append(manually_placed_diners[i])
+        else:
+            new_diner_list.append(randomly_placed_diners[0])
+            randomly_placed_diners.pop(0)
+    return new_diner_list
+

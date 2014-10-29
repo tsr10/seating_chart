@@ -135,6 +135,7 @@ INSTALLED_APPS = (
     'compressor',
     'seating_chart',
     'crispy_forms',
+    'rest_framework',
 )
 
 # A sample logging configuration. The only tangible logging

@@ -3,7 +3,28 @@
 
     {% include 'forms/generic-form-nonfield-errors.html' %}
 
-    {{ form }}
+    <div class="arrange-seating-chart">
+        {% for field in form %}
+            {% if forloop.first %}
+                <div class="fieldWrapper head">
+                    {{ field.errors }}
+                    <b>Head:</b> {{ field }}
+                </div>
+            {% elif forloop.counter == dinner.attendees %}
+            <br>
+                <div class="fieldWrapper foot">
+                    {{ field.errors }}
+                    <b>Foot:</b> {{ field }}
+                </div>
+            {% else %}
+                {{ field.errors }}
+                {{ field.label_tag }} {{ field }}
+                {% if forloop.counter0|divisibleby:2 %}
+                <br>
+                {% endif %}
+            {% endif %}
+        {% endfor %}
+    </div>
 
     <div class="clearfix"></div>
 

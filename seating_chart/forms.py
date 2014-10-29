@@ -108,7 +108,8 @@ def arrange_seating_chart_form_factory(dinner):
             self.helper = FormHelper()
             super(Form, self).__init__(*args, **kwargs)
             for i in dinner.get_seating_order():
-                self.fields['seat__' + str(i)] = forms.ModelChoiceField(PersonToDinner.objects.filter(dinner=dinner), required=False)
+                if i != "None":
+                    self.fields['seat__' + str(i)] = forms.ModelChoiceField(PersonToDinner.objects.filter(dinner=dinner), required=False)
 
         _dinner = dinner
 
