@@ -46,47 +46,23 @@ def add_one_more_diner(current_chart, possible_neighbors, diner_list, manually_p
     We try adding one more diner to the table here. This is a recursive function.
     """
     if len(current_chart) == len(diner_list):
-        return True, current_chart
-    for diner, neighbors in possible_neighbors.iteritems():
-        if not manually_placed_diners.has_key(diner):
-            if len(neighbors) < 2:
-                return False, current_chart
-    next_choices = []
-    for diner, neighbors in possible_neighbors.iteritems():
-        if (len(current_chart) == 0) or current_chart[-1] in neighbors:
-            next_choices.append(diner)
+        if (manually_placed_diners.has_key(len(current_chart)) and manually_placed_diners.has_key(0)) or (diner_list[len(current_chart) - 1] in possible_neighbors[diner_list[0]]):
+            return True, current_chart
+        else:
+            return False, current_chart
+    next_choice = None
     if manually_placed_diners.has_key(len(current_chart)):
-        if (manually_placed_diners[len(current_chart)] in next_choices) or (manually_placed_diners.has_key(len(current_chart)-1)):
-            next_choices = [manually_placed_diners[len(current_chart)]]
-        else:
-            next_choices = []
+        if (manually_placed_diners[len(current_chart)] in possible_neighbors[diner_list[len(current_chart) - 1]]) or (manually_placed_diners.has_key(len(current_chart)-1)):
+            next_choice = manually_placed_diners[len(current_chart)]
     else:
-        if diner_list[len(current_chart)] in next_choices:
-            next_choices = [diner_list[len(current_chart)]]
-        else:
-            next_choices = []
-    for next_choice in next_choices:
-        return_value, chart = add_one_more_diner(current_chart=current_chart + [next_choice], possible_neighbors=update_possible_neighbors(current_chart=current_chart + [next_choice], possible_neighbors=possible_neighbors), manually_placed_diners=manually_placed_diners, diner_list=diner_list)
+        if diner_list[len(current_chart)] in possible_neighbors[diner_list[len(current_chart) - 1]]:
+            next_choice = diner_list[len(current_chart)]
+    if next_choice:
+        current_chart.append(next_choice)
+        return_value, chart = add_one_more_diner(current_chart=current_chart, possible_neighbors=possible_neighbors, manually_placed_diners=manually_placed_diners, diner_list=diner_list)
         if return_value == True:
             return True, chart
     return False, current_chart
-
-def update_possible_neighbors(current_chart, possible_neighbors):
-    """
-    We eliminate the entries in the possible_neighbors dict for people who have been placed onto the list.
-    Note that we need to make a copy of the dictionary, as the possible_neighbors dictionary is different
-    for each branch of recursive calls.
-    """
-    new_possible_neighbors = copy.deepcopy(possible_neighbors)
-    del new_possible_neighbors[current_chart[-1]]
-    if len(current_chart) < 3:
-        return new_possible_neighbors
-    else:
-        for diner, neighbors in new_possible_neighbors.iteritems():
-            if current_chart[-2] in neighbors:
-                neighbors.remove(current_chart[-2])
-                new_possible_neighbors[diner] = neighbors
-        return new_possible_neighbors
 
 def configure_person_to_dinner_flags(person_to_dinner_list, dinner):
     """
