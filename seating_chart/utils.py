@@ -85,7 +85,7 @@ def randomly_arrange_diners(randomly_placed_diners, manually_placed_diners, dine
     """
     new_diner_list = []
     shuffle(randomly_placed_diners)
-    for i in range(0, len(diners)):
+    for i in xrange(0, len(diners)):
         if manually_placed_diners.has_key(i):
             new_diner_list.append(manually_placed_diners[i])
         else:

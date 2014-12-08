@@ -60,16 +60,11 @@ def generate_seating_chart(request, pk):
 		call_make_seating_chart_process.delay(dinner=dinner, diners=diners, manually_placed_diners=manually_placed_diners, randomly_placed_diners=randomly_placed_diners, past_dinners=list(Dinner.objects.filter(account=account, is_saved=True).order_by('-date')))
 		dinner.is_processing = True
 		dinner.save()
-		person_to_dinner_list = []
-
-	else:
-		person_to_dinner_list = []
 
 	head, sides, foot = dinner.render_chart()
 
 	return render_to_response('generate_seating_chart.html',
-		{'chart' : person_to_dinner_list,
-		'head' : head,
+		{'head' : head,
 		'sides' : sides,
 		'foot' : foot,
 		'account' : account,

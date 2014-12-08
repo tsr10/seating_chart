@@ -9,15 +9,22 @@
 
 Current dinners in DB:<br>
 {% for dinner in dinners %}
-	<b>Dinner on: {{ dinner.date }}, attendees: {{ dinner.attendees }} (<a href="{% url 'delete_dinner' pk=dinner.pk %}">X</a>)</b><br>
-	{% if not dinner.is_saved %}
-		Dinner not yet arranged.<br>
-		{% for person_to_dinner in dinner.get_person_to_dinners %}
-			Attending: {{ person_to_dinner.person }}<br>
-		{% endfor %}
-	{% else %}
-		{% include "show_seating_chart.html" with rendering=dinner.render_chart %}
-	{% endif %}
+	<div class="well expander">
+		<div class="expander-header">Dinner on: {{ dinner.date }}, attendees: {{ dinner.attendees }} (<a href="{% url 'delete_dinner' pk=dinner.pk %}">X</a>)</b><br>
+
+		<a data-toggle="collapse" href="#id_{{ dinner.pk }}_information">Review dinner information</a>
+		</div>
+		<div id="id_{{ dinner.pk }}_information" class="collapse">
+		{% if not dinner.is_saved %}
+			Dinner not yet arranged.<br>
+			{% for person_to_dinner in dinner.get_person_to_dinners %}
+				Attending: {{ person_to_dinner.person }}<br>
+			{% endfor %}
+		{% else %}
+			{% include "show_seating_chart.html" with rendering=dinner.render_chart %}
+		{% endif %}
+		</div>
+	</div>
 {% endfor %}
 
 <br>

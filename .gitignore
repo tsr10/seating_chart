@@ -1,5 +1,7 @@
 *.pyc
 */*.pyc
+dump.rdb*
+bower_components*
 .elasticbeanstalk/
 database.sqlite
 seating-chart.pem
