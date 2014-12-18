@@ -50,10 +50,10 @@ def generate_seating_chart(request, pk):
     dinner = Dinner.objects.get(pk=pk)
 
     manually_placed_diners = {}
-    manually_placed_diners_list = [(str(seating.person.pk), seating.seat_number) for seating in Seating.objects.select_related('person').filter(manually_placed_diner=True, dinner=dinner)]
-    for manually_placed_diner in manually_placed_diners_list:
-        manually_placed_diners[manually_placed_diner[1]] = manually_placed_diner[0]
-        manually_placed_diners[manually_placed_diner[0]] = manually_placed_diner[1]
+
+    for seating in Seating.objects.select_related('person').filter(manually_placed_diner=True, dinner=dinner):
+        manually_placed_diners[seating.seat_number] = str(seating.person.pk)
+        manually_placed_diners[str(seating.person.pk)] = seating.seat_number
 
     diners = [seating.person for seating in Seating.objects.filter(dinner=dinner).order_by('-is_head', 'manually_placed_diner')]
     randomly_placed_diners = [str(seating.person.pk) for seating in Seating.objects.select_related('person').filter(manually_placed_diner=False, dinner=dinner)]
@@ -151,9 +151,9 @@ def add_seating(request, pk):
         form = Form()
 
     return render_to_response('add_seating.html', {'dinner': dinner,
-                                                            'account': account,
-                                                            'form': form,
-                                                            'people_at_dinner': people_at_dinner, },
+                                                   'account': account,
+                                                   'form': form,
+                                                   'people_at_dinner': people_at_dinner, },
                               context_instance=RequestContext(request))
 
 
