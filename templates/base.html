@@ -38,7 +38,7 @@
                             <ul class='dropdown-menu'>
                                 {% if account.upcoming_dinners %}
                                 {% for dinner in account.upcoming_dinners %}
-                                <li><a href="{% url 'add_person_to_dinner' pk=dinner.pk %}">{{ dinner }}</a></li>
+                                <li><a href="{% url 'add_seating' pk=dinner.pk %}">{{ dinner }}</a></li>
                                 {% endfor %}
                                 {% else %}
                                 <li>No upcoming dinners.</li>

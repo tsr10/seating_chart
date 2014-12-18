@@ -1,4 +1,4 @@
-Django==1.5.1
+Django==1.7.1
 MySQL-python==1.2.3
 django-bootstrap-toolkit==2.15.0
 django-widget-tweaks==1.3

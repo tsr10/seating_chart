@@ -17,7 +17,7 @@ urlpatterns = patterns('',
     url(r'^delete-dinner/(?P<pk>\d+)$', 'seating_chart.views.delete_dinner', name='delete_dinner'),
 
     # For adding a new person to a dinner.
-    url(r'^add-person-to-dinner/(?P<pk>\d+)$', 'seating_chart.views.add_person_to_dinner', name='add_person_to_dinner'),
+    url(r'^add-person-to-dinner/(?P<pk>\d+)$', 'seating_chart.views.add_seating', name='add_seating'),
 
     # The about page, for information about the website.
     url(r'^about$', 'seating_chart.views.about', name='about'),

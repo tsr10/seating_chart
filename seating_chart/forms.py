@@ -1,7 +1,7 @@
 from django import forms
 from django.forms import extras
 
-from models import Person, PersonToDinner
+from models import Person, Seating
 
 from crispy_forms.helper import FormHelper
 
@@ -52,25 +52,25 @@ def add_dinner_form_factory(account):
 
 
 # Controls the page where we add people to dinners.
-class _AddPersonToDinnerForm(forms.Form):
+class _AddSeatingForm(forms.Form):
     pass
 
     def clean(self):
-        super(_AddPersonToDinnerForm, self).clean()
+        super(_AddSeatingForm, self).clean()
 
         person = self.cleaned_data.get('person', None)
         dinner = self._dinner
 
-        if PersonToDinner.objects.filter(person=person, dinner=dinner).exists():
+        if Seating.objects.filter(person=person, dinner=dinner).exists():
             raise forms.ValidationError("This person is already attached to this dinner!")
 
         return self.cleaned_data
 
 
-def add_person_to_dinner_form_factory(dinner, account):
+def add_seating_form_factory(dinner, account):
 
-    class Form(_AddPersonToDinnerForm):
-        person = forms.ModelChoiceField(Person.objects.filter(account=account).exclude(persontodinner__dinner=dinner))
+    class Form(_AddSeatingForm):
+        person = forms.ModelChoiceField(Person.objects.filter(account=account).exclude(seating__dinner=dinner))
         _dinner = dinner
 
     return Form
@@ -89,20 +89,20 @@ class _ArrangeSeatingChartForm(forms.Form):
             seat = self.cleaned_data.get('seat__' + str(i), None)
 
             if seat:
-                person_to_dinner = seat
-                person_to_dinner.seat_number = i
+                seating = seat
+                seating.seat_number = i
                 if i == 0:
-                    person_to_dinner.is_head = True
+                    seating.is_head = True
                 elif (i == dinner.attendees() - 1):
-                    person_to_dinner.is_foot = True
-                seat_list.append(person_to_dinner)
+                    seating.is_foot = True
+                seat_list.append(seating)
 
         if len(seat_list) != len(set(seat_list)):
             raise forms.ValidationError('The same diner has been assigned to a seat twice. Please check your inputs.')
 
-        for person_to_dinner in seat_list:
-            person_to_dinner.manually_placed_diner = True
-            person_to_dinner.save()
+        for seating in seat_list:
+            seating.manually_placed_diner = True
+            seating.save()
 
         return self.cleaned_data
 
@@ -115,7 +115,7 @@ def arrange_seating_chart_form_factory(dinner):
             super(Form, self).__init__(*args, **kwargs)
             for i in dinner.get_seating_order():
                 if i != "None":
-                    self.fields['seat__' + str(i)] = forms.ModelChoiceField(PersonToDinner.objects.filter(dinner=dinner), required=False)
+                    self.fields['seat__' + str(i)] = forms.ModelChoiceField(Seating.objects.filter(dinner=dinner), required=False)
 
         _dinner = dinner
 

@@ -17,8 +17,8 @@ Current dinners in DB:<br>
 		<div id="id_{{ dinner.pk }}_information" class="collapse">
 		{% if not dinner.is_saved %}
 			Dinner not yet arranged.<br>
-			{% for person_to_dinner in dinner.get_person_to_dinners %}
-				Attending: {{ person_to_dinner.person }}<br>
+			{% for seating in dinner.get_seatings %}
+				Attending: {{ seating.person }}<br>
 			{% endfor %}
 		{% else %}
 			{% include "show_seating_chart.html" with rendering=dinner.render_chart %}

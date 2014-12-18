@@ -6,7 +6,7 @@
 {% if dinner.attendees < 4 %}
 You need at least 4 people to attend a dinner.<br>
 Current attendees: {{ dinner.attendees }}
-{% include "current_attendees.html" with attendees=dinner.get_person_to_dinners %}
+{% include "current_attendees.html" with attendees=dinner.get_seatings %}
 {% else %}
 {% include "arrange_chart.html" %}
 {% endif %}

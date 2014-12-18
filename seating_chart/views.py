@@ -3,8 +3,8 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import render_to_response, redirect, get_object_or_404
 from django.template import RequestContext
 
-from seating_chart.forms import add_person_form_factory, add_dinner_form_factory, add_person_to_dinner_form_factory, arrange_seating_chart_form_factory
-from seating_chart.models import Person, Dinner, PersonToDinner, Account
+from seating_chart.forms import add_person_form_factory, add_dinner_form_factory, add_seating_form_factory, arrange_seating_chart_form_factory
+from seating_chart.models import Person, Dinner, Seating, Account
 from tasks import call_make_seating_chart_process
 
 
@@ -50,16 +50,17 @@ def generate_seating_chart(request, pk):
     dinner = Dinner.objects.get(pk=pk)
 
     manually_placed_diners = {}
-    manually_placed_diners_list = [(str(person_to_dinner.person.pk), person_to_dinner.seat_number) for person_to_dinner in PersonToDinner.objects.select_related('person').filter(manually_placed_diner=True, dinner=dinner)]
+    manually_placed_diners_list = [(str(seating.person.pk), seating.seat_number) for seating in Seating.objects.select_related('person').filter(manually_placed_diner=True, dinner=dinner)]
     for manually_placed_diner in manually_placed_diners_list:
         manually_placed_diners[manually_placed_diner[1]] = manually_placed_diner[0]
         manually_placed_diners[manually_placed_diner[0]] = manually_placed_diner[1]
 
-    diners = [person_to_dinner.person for person_to_dinner in PersonToDinner.objects.filter(dinner=dinner).order_by('-is_head', 'manually_placed_diner')]
-    randomly_placed_diners = [str(person_to_dinner.person.pk) for person_to_dinner in PersonToDinner.objects.select_related('person').filter(manually_placed_diner=False, dinner=dinner)]
+    diners = [seating.person for seating in Seating.objects.filter(dinner=dinner).order_by('-is_head', 'manually_placed_diner')]
+    randomly_placed_diners = [str(seating.person.pk) for seating in Seating.objects.select_related('person').filter(manually_placed_diner=False, dinner=dinner)]
 
     if not dinner.is_processing and not dinner.is_saved:
-        call_make_seating_chart_process.delay(dinner=dinner, diners=diners, manually_placed_diners=manually_placed_diners, randomly_placed_diners=randomly_placed_diners, past_dinners=list(Dinner.objects.filter(account=account, is_saved=True).order_by('-date')))
+        past_dinners = list(Dinner.objects.filter(account=account, is_saved=True).order_by('-date'))
+        call_make_seating_chart_process.delay(dinner=dinner, diners=diners, manually_placed_diners=manually_placed_diners, randomly_placed_diners=randomly_placed_diners, past_dinners=past_dinners, past_seatings=Seating.objects.filter(dinner__in=past_dinners))
         dinner.is_processing = True
         dinner.save()
 
@@ -127,7 +128,7 @@ def add_dinner(request):
 
 
 @login_required
-def add_person_to_dinner(request, pk):
+def add_seating(request, pk):
     """
     Allows the host to add a person to a dinner.
     """
@@ -135,21 +136,21 @@ def add_person_to_dinner(request, pk):
 
     dinner = Dinner.objects.get(pk=pk)
 
-    people_at_dinner = PersonToDinner.objects.filter(dinner=dinner)
+    people_at_dinner = Seating.objects.filter(dinner=dinner)
 
-    Form = add_person_to_dinner_form_factory(dinner=dinner, account=account)
+    Form = add_seating_form_factory(dinner=dinner, account=account)
 
     if request.method == 'POST':
         form = Form(request.POST)
         if form.is_valid():
-            person_to_dinner = PersonToDinner(person=form.cleaned_data['person'], dinner=dinner)
-            person_to_dinner.save()
-            messages.add_message(request, messages.SUCCESS, person_to_dinner.person.get_name() + " added to dinner on " + str(person_to_dinner.dinner.date))
-            return redirect('seating_chart.views.add_person_to_dinner', pk=dinner.pk)
+            seating = Seating(person=form.cleaned_data['person'], dinner=dinner)
+            seating.save()
+            messages.add_message(request, messages.SUCCESS, seating.person.get_name() + " added to dinner on " + str(seating.dinner.date))
+            return redirect('seating_chart.views.add_seating', pk=dinner.pk)
     else:
         form = Form()
 
-    return render_to_response('add_person_to_dinner.html', {'dinner': dinner,
+    return render_to_response('add_seating.html', {'dinner': dinner,
                                                             'account': account,
                                                             'form': form,
                                                             'people_at_dinner': people_at_dinner, },

@@ -1,24 +1,24 @@
 from celery import Celery
 
-from seating_chart.models import Dinner, PersonToDinner
-from seating_chart.utils import make_new_seating_chart, configure_person_to_dinner_flags
+from seating_chart.models import Seating
+from seating_chart.utils import make_new_seating_chart, configure_seating_flags
 from django.conf import settings
 
 app = Celery('tasks', backend=settings.BACKEND_URL, broker=settings.BROKER_URL)
 
 
 @app.task
-def call_make_seating_chart_process(dinner, diners, manually_placed_diners, randomly_placed_diners, past_dinners):
+def call_make_seating_chart_process(dinner, diners, manually_placed_diners, randomly_placed_diners, past_dinners, past_seatings):
     """
-    Generates a new seating chart. Performed asynchronously.
+    Generates a new seating chart. This task is performed asynchronously.
     """
-    chart = make_new_seating_chart(diners=diners, manually_placed_diners=manually_placed_diners, randomly_placed_diners=randomly_placed_diners, past_dinners=list(Dinner.objects.filter(account=dinner.account, is_saved=True).order_by('-date')))
+    chart = make_new_seating_chart(diners=diners, manually_placed_diners=manually_placed_diners, randomly_placed_diners=randomly_placed_diners, past_dinners=past_dinners, past_seatings=past_seatings)
 
-    person_to_dinners = PersonToDinner.objects.select_related('person').filter(dinner=dinner)
-    person_to_dinner_list = [person_to_dinners.filter(person__id=int(x))[0] for x in chart]
+    seatings = Seating.objects.select_related('person').filter(dinner=dinner)
+    seating_list = [seatings.filter(person__id=int(x))[0] for x in chart]
 
-    person_to_dinner_list = configure_person_to_dinner_flags(person_to_dinner_list=person_to_dinner_list, dinner=dinner)
-    [person_to_dinner.save() for person_to_dinner in person_to_dinner_list]
+    seating_list = configure_seating_flags(seating_list=seating_list, dinner=dinner)
+    [seating.save() for seating in seating_list]
 
     dinner.is_processing = False
     dinner.is_saved = True

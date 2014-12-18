@@ -9,7 +9,7 @@ class Account(models.Model):
     user = models.ForeignKey(User)
 
     def upcoming_dinners(self):
-        return Dinner.objects.filter(account=self, is_saved=False).order_by('date')
+        return Dinner.objects.filter(account=self, is_saved=False, is_processing=False).order_by('date')
 
 
 class Person(models.Model):
@@ -54,15 +54,14 @@ class Dinner(models.Model):
         else:
             pad = []
         first_half = range(1, self.attendees()/2) + pad
-        second_half = range(self.attendees()/2+1, self.attendees())
-        second_half.reverse()
+        second_half = range(self.attendees(), self.attendees()/2, -1)
         return [0] + [i for sub in zip(second_half, first_half) for i in sub] + [self.attendees()/2]
 
-    def get_person_to_dinners(self):
-        return PersonToDinner.objects.filter(dinner=self).order_by('person__last_name')
+    def get_seatings(self):
+        return Seating.objects.filter(dinner=self).order_by('person__last_name')
 
     def attendees(self):
-        return self.get_person_to_dinners().count()
+        return self.get_seatings().count()
 
     def get_foot_number(self):
         return self.attendees()/2
@@ -81,14 +80,14 @@ class Dinner(models.Model):
 
     def reset_dinner(self):
         self.is_saved = False
-        for person_to_dinner in PersonToDinner.objects.filter(dinner=self):
-            person_to_dinner.manually_placed_diner = False
-            person_to_dinner.left_neighbor = None
-            person_to_dinner.right_neighbor = None
-            person_to_dinner.seat_number = None
-            person_to_dinner.is_head = False
-            person_to_dinner.is_foot = False
-            person_to_dinner.save()
+        for seating in Seating.objects.filter(dinner=self):
+            seating.manually_placed_diner = False
+            seating.left_neighbor = None
+            seating.right_neighbor = None
+            seating.seat_number = None
+            seating.is_head = False
+            seating.is_foot = False
+            seating.save()
         self.save()
         return self
 
@@ -96,19 +95,18 @@ class Dinner(models.Model):
         """
         Prepares the seating chart for showing on the page.
         """
-        person_to_dinners = PersonToDinner.objects.filter(dinner=self).order_by('seat_number')
-        head = person_to_dinners[0]
-        foot = person_to_dinners[len(person_to_dinners)/2]
-        second_half = person_to_dinners[(len(person_to_dinners)/2 + 1):(len(person_to_dinners))]
-        second_half.reverse()
-        first_half = person_to_dinners[1:(len(person_to_dinners)/2)]
+        seatings = Seating.objects.filter(dinner=self).order_by('seat_number')
+        head = seatings[0]
+        foot = seatings[len(seatings)/2]
+        second_half = seatings[len(seatings):len(seatings)/2:-1]
+        first_half = seatings[1:(len(seatings)/2)]
         if len(first_half) < len(second_half):
             first_half += [{"person": "Empty seat"}]
         sides = zip(second_half, first_half)
         return {"head": head, "sides": sides, "foot": foot}
 
 
-class PersonToDinner(models.Model):
+class Seating(models.Model):
     """
     The model that links people to dinners.
     """
