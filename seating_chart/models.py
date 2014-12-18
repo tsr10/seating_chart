@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 
+
 class Account(models.Model):
     """
     An account variable for assigning flags to logged in users. One per user.
@@ -9,6 +10,7 @@ class Account(models.Model):
 
     def upcoming_dinners(self):
         return Dinner.objects.filter(account=self, is_saved=False).order_by('date')
+
 
 class Person(models.Model):
     """
@@ -27,6 +29,7 @@ class Person(models.Model):
 
     class Meta:
         unique_together = ("account", "first_name", "last_name")
+
 
 class Dinner(models.Model):
     """
@@ -100,9 +103,10 @@ class Dinner(models.Model):
         second_half.reverse()
         first_half = person_to_dinners[1:(len(person_to_dinners)/2)]
         if len(first_half) < len(second_half):
-            first_half += [{"person" : "Empty seat"}]
+            first_half += [{"person": "Empty seat"}]
         sides = zip(second_half, first_half)
-        return {"head" : head, "sides" : sides, "foot" : foot}
+        return {"head": head, "sides": sides, "foot": foot}
+
 
 class PersonToDinner(models.Model):
     """

@@ -12,11 +12,11 @@ ADMINS = (
 
 LOGIN_URL = '/login/'
 
-LOGIN_REDIRECT_URL = '/seating_chart/add_person/'
+LOGIN_REDIRECT_URL = '/seating_chart/add-person/'
 
 LOGOUT_URL = '/logout/'
 
-#redis broker and backend urls
+# redis broker and backend urls
 BROKER_URL = 'redis://localhost:6379/0'
 BACKEND_URL = 'redis://localhost:6379/0'
 
@@ -24,7 +24,7 @@ MANAGERS = ADMINS
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3', # Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
+        'ENGINE': 'django.db.backends.sqlite3',  # Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
         'NAME': 'database.sqlite',                      # Or path to database file if using sqlite3.
         'USER': '',                      # Not used with sqlite3.
         'PASSWORD': '',                  # Not used with sqlite3.
@@ -131,9 +131,9 @@ INSTALLED_APPS = (
     'django.contrib.admin',
     # Uncomment the next line to enable admin documentation:
     'django.contrib.admindocs',
-    
+
     'widget_tweaks',
-    'django_extensions', 
+    'django_extensions',
     'bootstrap_toolkit',
     'bootstrap3',
     'compressor',

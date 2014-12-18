@@ -7,7 +7,8 @@ from crispy_forms.helper import FormHelper
 
 import datetime
 
-#Controls the page where we add new people to an account
+
+# Controls the page where we add new people to an account
 class _AddPersonForm(forms.Form):
     first_name = forms.CharField(max_length=100, required=True)
     last_name = forms.CharField(max_length=100, required=True)
@@ -24,6 +25,7 @@ class _AddPersonForm(forms.Form):
 
         return self.cleaned_data
 
+
 def add_person_form_factory(account):
 
     class Form(_AddPersonForm):
@@ -31,14 +33,15 @@ def add_person_form_factory(account):
 
     return Form
 
-#Controls the page where we add new dinners.
+
+# Controls the page where we add new dinners.
 class _AddDinnerForm(forms.Form):
-    date = forms.DateField(required=True, label='Date of dinner',
-        widget=extras.SelectDateWidget(
-            years=tuple(reversed(range(datetime.date.today().year, datetime.date.today().year + 2))),
-            attrs={'empty_label': ''}
-        )
-    )
+    date = forms.DateField(required=True,
+                           label='Date of dinner',
+                           widget=extras.SelectDateWidget(years=tuple(reversed(range(datetime.date.today().year, datetime.date.today().year + 2))),
+                                                          attrs={'empty_label': ''})
+                           )
+
 
 def add_dinner_form_factory(account):
 
@@ -47,7 +50,8 @@ def add_dinner_form_factory(account):
 
     return Form
 
-#Controls the page where we add people to dinners.
+
+# Controls the page where we add people to dinners.
 class _AddPersonToDinnerForm(forms.Form):
     pass
 
@@ -62,6 +66,7 @@ class _AddPersonToDinnerForm(forms.Form):
 
         return self.cleaned_data
 
+
 def add_person_to_dinner_form_factory(dinner, account):
 
     class Form(_AddPersonToDinnerForm):
@@ -70,8 +75,9 @@ def add_person_to_dinner_form_factory(dinner, account):
 
     return Form
 
+
 class _ArrangeSeatingChartForm(forms.Form):
-    
+
     def clean(self):
         super(_ArrangeSeatingChartForm, self).clean()
 
@@ -93,7 +99,7 @@ class _ArrangeSeatingChartForm(forms.Form):
 
         if len(seat_list) != len(set(seat_list)):
             raise forms.ValidationError('The same diner has been assigned to a seat twice. Please check your inputs.')
-        
+
         for person_to_dinner in seat_list:
             person_to_dinner.manually_placed_diner = True
             person_to_dinner.save()
@@ -114,10 +120,3 @@ def arrange_seating_chart_form_factory(dinner):
         _dinner = dinner
 
     return Form
-
-
-
-
-
-
-

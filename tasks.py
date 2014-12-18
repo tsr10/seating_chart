@@ -6,8 +6,12 @@ from django.conf import settings
 
 app = Celery('tasks', backend=settings.BACKEND_URL, broker=settings.BROKER_URL)
 
+
 @app.task
 def call_make_seating_chart_process(dinner, diners, manually_placed_diners, randomly_placed_diners, past_dinners):
+    """
+    Generates a new seating chart. Performed asynchronously.
+    """
     chart = make_new_seating_chart(diners=diners, manually_placed_diners=manually_placed_diners, randomly_placed_diners=randomly_placed_diners, past_dinners=list(Dinner.objects.filter(account=dinner.account, is_saved=True).order_by('-date')))
 
     person_to_dinners = PersonToDinner.objects.select_related('person').filter(dinner=dinner)

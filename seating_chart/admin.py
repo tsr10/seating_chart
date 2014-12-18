@@ -1,17 +1,21 @@
 from django.contrib import admin
 from seating_chart.models import Account, Person, Dinner, PersonToDinner
 
+
 class AccountAdmin(admin.ModelAdmin):
-	pass
+    pass
+
 
 class PersonAdmin(admin.ModelAdmin):
-	pass
+    pass
+
 
 class DinnerAdmin(admin.ModelAdmin):
-	pass
+    pass
+
 
 class PersonToDinnerAdmin(admin.ModelAdmin):
-	pass
+    pass
 
 admin.site.register(Account, AccountAdmin)
 admin.site.register(Person, PersonAdmin)
