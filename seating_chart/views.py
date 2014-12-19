@@ -14,11 +14,10 @@ def home(request):
 
 @login_required
 def arrange_seating_chart(request, pk):
-    """
-    Generates the seating chart. You can only use these commands if you've assigned enough people to this
+    """Generates the seating chart. You can only use these commands if you've assigned enough people to this
     dinner already.
     """
-    account = Account.objects.filter()[0]
+    account = get_object_or_404(Account, user=request.user)
 
     dinner = Dinner.objects.get(pk=pk)
 
@@ -41,11 +40,9 @@ def arrange_seating_chart(request, pk):
 
 @login_required
 def generate_seating_chart(request, pk):
-    """
-    Generates the seating chart and outputs it to a form.
-    """
+    """Generates the seating chart and outputs it to a form."""
 
-    account = Account.objects.filter()[0]
+    account = get_object_or_404(Account, user=request.user)
 
     dinner = Dinner.objects.get(pk=pk)
 
@@ -76,10 +73,8 @@ def generate_seating_chart(request, pk):
 
 @login_required
 def add_person(request):
-    """
-    Allows the host to add a new person to the database.
-    """
-    account = Account.objects.get(user=request.user)
+    """Allows the host to add a new person to the database."""
+    account = get_object_or_404(Account, user=request.user)
 
     Form = add_person_form_factory(account=account)
 
@@ -103,10 +98,8 @@ def add_person(request):
 
 @login_required
 def add_dinner(request):
-    """
-    Allows the host to add a new dinner.
-    """
-    account = Account.objects.filter()[0]
+    """Allows the host to add a new dinner."""
+    account = get_object_or_404(Account, user=request.user)
 
     Form = add_dinner_form_factory(account=account)
 
@@ -129,10 +122,8 @@ def add_dinner(request):
 
 @login_required
 def add_seating(request, pk):
-    """
-    Allows the host to add a person to a dinner.
-    """
-    account = Account.objects.filter()[0]
+    """Allows the host to add a person to a dinner."""
+    account = get_object_or_404(Account, user=request.user)
 
     dinner = Dinner.objects.get(pk=pk)
 
@@ -159,9 +150,7 @@ def add_seating(request, pk):
 
 @login_required
 def delete_dinner(request, pk):
-    """
-    Allows the host to add a person to a dinner.
-    """
+    """Allows the host to add a person to a dinner."""
     dinner = get_object_or_404(Dinner, pk=pk)
 
     dinner.delete()
@@ -172,7 +161,5 @@ def delete_dinner(request, pk):
 
 @login_required
 def about(request):
-    """
-    Shows the about page.
-    """
+    """Shows the about page."""
     return render_to_response('about.html', {}, context_instance=RequestContext(request))
